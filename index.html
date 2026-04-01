@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lace It</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f5f5;--panel-bg:#fff;--border:#e0e0e0;--text:#1a1a1a;--muted:#888;--accent:#39ff14;--header-bg:#fff;--canvas-bg:#eee;--header-h:44px}
+[data-theme="dark"]{--bg:#141414;--panel-bg:#1e1e1e;--border:#2a2a2a;--text:#f0f0f0;--muted:#666;--accent:#39ff14;--header-bg:#0e0e0e;--canvas-bg:#1a1a1a}
+html,body{height:100%;font-family:'Outfit','Noto Sans SC',sans-serif;font-size:13px;background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
+header{height:var(--header-h);background:var(--header-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;z-index:100}
+.brand{font-weight:500;font-size:15px;letter-spacing:-.3px}.brand-it{color:var(--accent)}
+.sep{flex:1}
+.btn-icon{height:28px;border:1px solid var(--border);background:transparent;border-radius:6px;cursor:pointer;color:var(--text);font-family:inherit;font-size:12px;padding:0 10px;transition:border-color .15s,color .15s}
+.btn-icon:hover{border-color:var(--accent);color:var(--accent)}
+#layout{display:flex;flex:1;overflow:hidden}
+#panel{width:260px;flex-shrink:0;background:var(--panel-bg);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.ps{padding:12px 14px;border-bottom:1px solid var(--border)}
+.ps-t{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:500}
+.row{display:flex;align-items:center;gap:6px;margin-bottom:7px;font-size:11px;color:var(--muted)}
+.row:last-child{margin-bottom:0}
+.row>span:first-child{width:72px;flex-shrink:0;color:var(--text)}
+input[type=range]{flex:1;accent-color:var(--accent);height:3px;min-width:0}
+.val{width:20px;text-align:right;flex-shrink:0;color:var(--muted)}
+select{flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-size:11px;font-family:inherit;min-width:0}
+input[type=color]{width:28px;height:22px;border:1px solid var(--border);border-radius:4px;cursor:pointer;padding:0;flex-shrink:0}
+input[type=text]{flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:13px;font-family:inherit;letter-spacing:.12em;text-transform:uppercase;min-width:0}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent)}
+#btn-regen{width:calc(100% - 28px);margin:12px 14px 0;border-color:var(--accent);color:var(--accent);background:rgba(57,255,20,.06)}
+#btn-regen:hover{background:rgba(57,255,20,.14)}
+.swatch-row{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.swatch-group{display:flex;gap:2px;cursor:pointer;padding:3px;border-radius:5px;border:2px solid transparent;transition:border-color .15s}
+.swatch-group.active{border-color:var(--accent)}
+.swatch-dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.12)}
+#canvas-wrap{flex:1;display:flex;justify-content:center;align-items:center;overflow:auto;background:var(--canvas-bg)}
+#c{max-width:100%;max-height:100%;object-fit:contain;display:block}
+canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">Lace<span class="brand-it">It</span></span>
+  <span class="sep"></span>
+  <button class="btn-icon" id="btn-theme">◐</button>
+  <button class="btn-icon" id="btn-export">↓ PNG</button>
+  <button class="btn-icon" id="btn-svg">↓ SVG</button>
+</header>
+<div id="layout">
+  <div id="panel">
+    <div class="ps">
+      <div class="ps-t">Form</div>
+      <div class="row"><span>Shape</span>
+        <select id="sel-shape">
+          <option value="fungi">Fungi 🍄</option>
+          <option value="fern">Fern 🌿</option>
+          <option value="moth">Moth 🦋</option>
+          <option value="text">Text ✦</option>
+          <option value="image">Image 🖼</option>
+        </select>
+      </div>
+      <div id="text-input-row" class="row" style="display:none"><span>Letters</span>
+        <input type="text" id="inp-text" value="AB" maxlength="4">
+      </div>
+      <div id="image-upload-row" style="display:none;margin-top:6px">
+        <label id="upload-label" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;border:1px dashed var(--border);border-radius:6px;cursor:pointer;font-size:11px;color:var(--muted);transition:border-color .15s">
+          <span>↑ Upload image</span>
+          <input type="file" id="inp-image" accept="image/*" style="display:none">
+        </label>
+        <div id="upload-preview" style="display:none;margin-top:6px;position:relative">
+          <img id="preview-img" style="width:100%;border-radius:4px;display:block">
+          <div style="font-size:10px;color:var(--muted);margin-top:4px" id="contour-status"></div>
+        </div>
+        <div class="row" style="margin-top:8px"><span>Layers</span><input type="range" id="sl-layers" min="2" max="8" value="4"><span class="val" id="vl-layers">4</span></div>
+        <div class="row"><span>Simplify</span><input type="range" id="sl-simplify" min="0" max="15" value="3"><span class="val" id="vl-simplify">3</span></div>
+        <div class="row"><span>Threshold</span><input type="range" id="sl-thresh" min="0" max="255" value="128"><span class="val" id="vl-thresh">128</span></div>
+        <div class="row"><span>Contrast</span><input type="range" id="sl-contrast" min="0" max="20" value="10"><span class="val" id="vl-contrast">10</span></div>
+        <div class="row"><span>Invert</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-invert"> flip</label></div>
+      </div>
+      <div class="row"><span>Size</span><input type="range" id="sl-size" min="3" max="20" value="12"><span class="val" id="vl-size">12</span></div>
+    </div>
+    <div class="ps">
+      <div class="ps-t">Stitch</div>
+      <div class="row"><span>Mesh</span><input type="range" id="sl-mesh" min="2" max="10" value="5"><span class="val" id="vl-mesh">5</span></div>
+      <div class="row"><span>Tightness</span><input type="range" id="sl-tight" min="0" max="10" value="5"><span class="val" id="vl-tight">5</span></div>
+      <div class="row"><span>Line type</span>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="cb-straight" style="accent-color:var(--accent)"> straight</label>
+      </div>
+      <div class="row"><span>Drape</span><input type="range" id="sl-drape" min="0" max="10" value="0"><span class="val" id="vl-drape">0</span></div>
+      <div class="row"><span>Loose</span><input type="range" id="sl-loose" min="0" max="10" value="2"><span class="val" id="vl-loose">2</span></div>
+      <div class="row"><span>Pattern</span>
+        <select id="sel-stitch">
+          <option value="hex">Hexagonal</option>
+          <option value="diamond">Diamond</option>
+          <option value="random">Random</option>
+        </select>
+      </div>
+    </div>
+    <div class="ps">
+      <div class="ps-t">Thread</div>
+      <div class="row"><span>Weight</span><input type="range" id="sl-weight" min="1" max="10" value="4"><span class="val" id="vl-weight">4</span></div>
+      <div class="row"><span>Stray ends</span><input type="range" id="sl-stray" min="0" max="10" value="5"><span class="val" id="vl-stray">5</span></div>
+      <div class="row"><span>Colors</span></div>
+      <div class="swatch-row" id="color-swatches"></div>
+    </div>
+    <div class="ps">
+      <div class="ps-t">Animate</div>
+      <div class="row"><span>Live</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-anim"> on</label></div>
+      <div class="row"><span>Speed</span><input type="range" id="sl-aspeed" min="1" max="10" value="3"><span class="val" id="vl-aspeed">3</span></div>
+    </div>
+    <div class="ps">
+      <div class="ps-t">Canvas</div>
+      <div class="row"><span>Background</span><input type="color" id="col-bg" value="#f5f5f5"></div>
+    </div>
+    <button class="btn-icon" id="btn-regen">↺ Regenerate</button>
+  </div>
+  <div id="canvas-wrap"><canvas id="c" width="1200" height="1400"></canvas></div>
+</div>
+<script>
+// ── Letter bitmap: 7×9 grid per char, used to build polygon outlines ──
+// Each char is a flat 63-bit array (7 cols × 9 rows), 1=filled
+var LBMAP = {
+  'A':[0,0,1,1,0,0,0, 0,1,0,0,1,0,0, 1,0,0,0,0,1,0, 1,0,0,0,0,1,0, 1,1,1,1,1,1,0, 1,0,0,0,0,1,0, 1,0,0,0,0,1,0, 1,0,0,0,0,1,0, 0,0,0,0,0,0,0],
+  'B':[1,1,1,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,1,1,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,0,1,0, 1,0,0,0,0,1,0, 1,1,1,1,1,0,0, 0,0,0,0,0,0,0],
+  'C':[0,1,1,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,1,0,0, 0,1,1,1,0,0,0, 0,0,0,0,0,0,0],
+  'D':[1,1,1,0,0,0,0, 1,0,0,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,1,0,0,0, 1,1,1,0,0,0,0, 0,0,0,0,0,0,0],
+  'E':[1,1,1,1,1,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,1,1,1,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,1,1,1,1,0,0, 0,0,0,0,0,0,0],
+  'F':[1,1,1,1,1,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,1,1,1,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 0,0,0,0,0,0,0],
+  'G':[0,1,1,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,1,1,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,1,1,1,1,0,0, 0,0,0,0,0,0,0],
+  'H':[1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,1,1,1,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,0,0,0,0,0,0],
+  'I':[0,1,1,1,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,1,1,1,0,0,0, 0,0,0,0,0,0,0],
+  'J':[0,0,0,1,1,0,0, 0,0,0,0,1,0,0, 0,0,0,0,1,0,0, 0,0,0,0,1,0,0, 0,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,1,1,1,0,0,0, 0,0,0,0,0,0,0],
+  'K':[1,0,0,1,0,0,0, 1,0,1,0,0,0,0, 1,1,0,0,0,0,0, 1,1,0,0,0,0,0, 1,0,1,0,0,0,0, 1,0,0,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,0,0,0,0,0,0],
+  'L':[1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,1,1,1,1,0,0, 0,0,0,0,0,0,0],
+  'M':[1,0,0,0,1,0,0, 1,1,0,1,1,0,0, 1,0,1,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,0,0,0,0,0,0],
+  'N':[1,0,0,0,1,0,0, 1,1,0,0,1,0,0, 1,0,1,0,1,0,0, 1,0,0,1,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,0,0,0,0,0,0],
+  'O':[0,1,1,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,1,1,1,0,0,0, 0,0,0,0,0,0,0],
+  'P':[1,1,1,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,1,1,1,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 0,0,0,0,0,0,0],
+  'Q':[0,1,1,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,1,0,1,0,0, 1,0,0,1,1,0,0, 1,0,0,0,1,0,0, 0,1,1,1,0,1,0, 0,0,0,0,0,0,0],
+  'R':[1,1,1,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,1,1,1,0,0,0, 1,0,1,0,0,0,0, 1,0,0,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,0,0,0,0,0,0],
+  'S':[0,1,1,1,0,0,0, 1,0,0,0,1,0,0, 1,0,0,0,0,0,0, 0,1,1,0,0,0,0, 0,0,0,1,1,0,0, 0,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,1,1,1,0,0,0, 0,0,0,0,0,0,0],
+  'T':[1,1,1,1,1,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,0,0,0,0],
+  'U':[1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,1,1,1,0,0,0, 0,0,0,0,0,0,0],
+  'V':[1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,1,0,1,0,0,0, 0,1,0,1,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,0,0,0,0],
+  'W':[1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 1,0,1,0,1,0,0, 1,0,1,0,1,0,0, 1,1,0,1,1,0,0, 1,0,0,0,1,0,0, 1,0,0,0,1,0,0, 0,0,0,0,0,0,0],
+  'X':[1,0,0,0,1,0,0, 0,1,0,1,0,0,0, 0,0,1,0,0,0,0, 0,1,0,1,0,0,0, 0,1,0,1,0,0,0, 0,0,1,0,0,0,0, 0,1,0,1,0,0,0, 1,0,0,0,1,0,0, 0,0,0,0,0,0,0],
+  'Y':[1,0,0,0,1,0,0, 0,1,0,1,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,0,0,0,0],
+  'Z':[1,1,1,1,1,0,0, 0,0,0,0,1,0,0, 0,0,0,1,0,0,0, 0,0,1,0,0,0,0, 0,1,0,0,0,0,0, 1,0,0,0,0,0,0, 1,0,0,0,0,0,0, 1,1,1,1,1,0,0, 0,0,0,0,0,0,0]
+};
+var LB_COLS=7, LB_ROWS=9;
+
+// Build polygon list from letter bitmap — each filled cell becomes a small quad poly
+function buildText(cx,cy,R,text){
+  var str=(text||'A').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4)||'A';
+  var nChars=str.length;
+  var cellSize=R*0.18;
+  var totalW=nChars*LB_COLS*cellSize+(nChars-1)*cellSize*1.5;
+  var totalH=LB_ROWS*cellSize;
+  var startX=cx-totalW/2;
+  var startY=cy-totalH/2;
+  var polys=[], zones=[];
+  var zoneNames=['cap','stem','wing_upper','wing_lower'];
+  str.split('').forEach(function(ch,ci){
+    var bm=LBMAP[ch];
+    if(!bm) return;
+    var ox=startX+ci*(LB_COLS*cellSize+cellSize*1.5);
+    var zoneName=zoneNames[ci%zoneNames.length];
+    for(var row=0;row<LB_ROWS;row++){
+      for(var col=0;col<LB_COLS;col++){
+        if(!bm[row*LB_COLS+col]) continue;
+        var px=ox+col*cellSize, py=startY+row*cellSize;
+        // slightly bloated cell quad for overlap
+        var pad=cellSize*0.15;
+        polys.push({pts:[
+          [px-pad,py-pad],[px+cellSize+pad,py-pad],
+          [px+cellSize+pad,py+cellSize+pad],[px-pad,py+cellSize+pad]
+        ], zone:zoneName});
+        zones.push({cx:px+cellSize/2,cy:py+cellSize/2,name:zoneName});
+      }
+    }
+  });
+  return {polys:polys, zones:zones};
+}
+
+var cv = document.getElementById('c');
+var imgContourData = null;
+var imgOffscreen = document.createElement('canvas');
+var ctx = cv.getContext('2d');
+var W = cv.width, H = cv.height;
+
+// static layer cache: pre-render non-animated parts
+var staticLayer = document.createElement('canvas');
+staticLayer.width = W; staticLayer.height = H;
+var staticCtx = staticLayer.getContext('2d');
+var staticDirty = true; // rebuild static layer on next draw
+
+// color palettes (like the poster — bold fiber colors)
+var PALETTES = [
+  ['#3a7fc1','#d95f2b','#e8e4dc'],   // blue / orange / cream (poster)
+  ['#2a6a3a','#c8a020','#f0ece4'],   // forest / gold / linen
+  ['#8b2060','#4a8ab0','#f5f0e8'],   // rose / slate / ivory
+  ['#1a3a6a','#c84040','#d4c8b0'],   // navy / red / warm grey
+  ['#5a2a8a','#30885a','#f0e8d8'],   // violet / sage / parchment
+];
+var activePalette = 0;
+var seed = 0;
+var animRaf = null, animT = 0, animating = false;
+
+// seeded LCG
+var rng = 0;
+function sr(){ rng=(rng*1664525+1013904223)&0xffffffff; return (rng>>>0)/4294967295; }
+function reseed(s){ rng = s|0; FF_SEED=(s%100)*0.37+1.2; }
+
+// ── Shape samplers — return true if point (x,y) is inside shape ──
+// all shapes centered at (cx,cy), scale=radius R
+
+// ── Organic polygon helpers ──
+// Build a closed organic outline as array of [x,y] points
+function organicPoly(cx,cy,baseR,lobes,wobbleAmp,wobbleFreq,skewX,skewY,n){
+  n=n||120;
+  var pts=[];
+  for(var i=0;i<n;i++){
+    var a=Math.PI*2*i/n;
+    // lobe modulation
+    var r=baseR*(1+Math.sin(a*lobes+lobes)*wobbleAmp);
+    // high-freq roughness
+    r+=baseR*0.04*Math.sin(a*wobbleFreq*3.7+1.3);
+    r+=baseR*0.025*Math.sin(a*wobbleFreq*7.1+2.8);
+    pts.push([cx+Math.cos(a)*r*skewX, cy+Math.sin(a)*r*skewY]);
+  }
+  return pts;
+}
+
+// Ray-cast point-in-polygon
+function ptInPoly(px,py,poly){
+  var inside=false;
+  for(var i=0,j=poly.length-1;i<poly.length;j=i++){
+    var xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];
+    if(((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+
+// Which sub-zone is a point in (by distance to sub-shapes)
+function closestZone(x,y,zones){
+  var best=null, bestD=Infinity;
+  zones.forEach(function(z){
+    var d=Math.hypot(x-z.cx,y-z.cy);
+    if(d<bestD){bestD=d;best=z.name;}
+  });
+  return best||'body';
+}
+
+// ── Shape builders — return {polys:[{pts,zone}], zones:[{cx,cy,name}]} ──
+
+function buildFungi(cx,cy,R,s){
+  // s = seeded rng snapshot
+  // cap: wide umbrella with wavy fringe, slight lean
+  var lean=(sr()-0.5)*0.12;
+  var capCx=cx+lean*R, capCy=cy-R*0.08;
+  var capLobes=5+Math.floor(sr()*4);       // 5-8 lobes on edge
+  var capWobble=0.06+sr()*0.09;
+  var capSkX=0.95+sr()*0.12;
+  var capPts=organicPoly(capCx,capCy,R*0.54,capLobes,capWobble,capLobes,capSkX,0.48);
+  // only lower half of cap
+  var capBottom=capCy+R*0.02;
+  var capFiltered=capPts.filter(function(p){return p[1]>=capCy-R*0.46;});
+
+  // add fringe scallops along bottom edge of cap
+  var scallops=[];
+  var scN=12+Math.floor(sr()*8);
+  for(var i=0;i<=scN;i++){
+    var t=i/scN;
+    var sa=Math.PI+Math.PI*t;
+    var sr2=R*(0.50+Math.sin(t*Math.PI)*0.06+Math.sin(i*2.3)*0.03);
+    scallops.push([capCx+Math.cos(sa)*sr2*capSkX, capCy+Math.sin(sa)*sr2*0.48]);
+  }
+
+  // stem: tapered, slightly curved
+  var stemTilt=(sr()-0.5)*R*0.08;
+  var stemW=R*(0.13+sr()*0.06);
+  var stemH=R*(0.55+sr()*0.18);
+  var stemPts=[
+    [cx-stemW*0.7+stemTilt, cy+R*0.02],
+    [cx+stemW*0.7+stemTilt, cy+R*0.02],
+    [cx+stemW*(1+sr()*0.3), cy+stemH],
+    [cx-stemW*(1+sr()*0.3), cy+stemH],
+  ];
+  // add organic bump to stem sides
+  var stemFull=[];
+  stemFull.push(stemPts[0]);
+  for(var si=1;si<=6;si++){
+    var st=si/7;
+    var bumpL=stemPts[0][0]+(stemPts[3][0]-stemPts[0][0])*st + Math.sin(st*Math.PI*2+1)*stemW*0.18;
+    var by=stemPts[0][1]+(stemPts[3][1]-stemPts[0][1])*st;
+    stemFull.push([bumpL,by]);
+  }
+  stemFull.push(stemPts[3]);
+  stemFull.push(stemPts[2]);
+  for(var si2=6;si2>=1;si2--){
+    var st2=si2/7;
+    var bumpR=stemPts[1][0]+(stemPts[2][0]-stemPts[1][0])*st2 + Math.sin(st2*Math.PI*2+2)*stemW*0.18;
+    var by2=stemPts[1][1]+(stemPts[2][1]-stemPts[1][1])*st2;
+    stemFull.push([bumpR,by2]);
+  }
+  stemFull.push(stemPts[1]);
+
+  return {
+    polys:[
+      {pts:scallops, zone:'cap'},
+      {pts:stemFull, zone:'stem'}
+    ],
+    zones:[
+      {cx:capCx, cy:capCy-R*0.1, name:'cap'},
+      {cx:cx, cy:cy+stemH*0.5, name:'stem'}
+    ]
+  };
+}
+
+function buildFern(cx,cy,R,s){
+  var polys=[], zones=[];
+  var pinnae=9+Math.floor(sr()*5);
+  // rachis curves slightly
+  var curve=( sr()-0.5)*R*0.15;
+  for(var p=0;p<pinnae;p++){
+    var pp=(p+0.5)/pinnae;
+    // rachis position at this height
+    var rx=cx+curve*(1-pp)*Math.sin(pp*Math.PI);
+    var ry=cy+R*0.52-pp*R*1.02;
+    var side=(p%2===0)?1:-1;
+    var plen=R*(0.42*(1-pp*0.6)+0.08)*(0.85+sr()*0.3);
+    var pang=side*(Math.PI/2+pp*0.28+(sr()-0.5)*0.15);
+    var pcx=rx+Math.cos(pang)*plen*0.45;
+    var pcy=ry+Math.sin(pang)*plen*0.38;
+    var pinnLobes=3+Math.floor(sr()*4);
+    var pts=organicPoly(pcx,pcy,plen*0.38,pinnLobes,0.12+sr()*0.1,pinnLobes,1.6+sr()*0.3,0.55+sr()*0.2);
+    polys.push({pts:pts, zone:p%3===0?'pinna_a':'pinna_b'});
+    zones.push({cx:pcx,cy:pcy,name:p%3===0?'pinna_a':'pinna_b'});
+  }
+  // rachis strip
+  var rachisW=R*0.035;
+  var rachisPts=[];
+  var rsegs=16;
+  for(var rs=0;rs<=rsegs;rs++){
+    var rp=rs/rsegs;
+    var rrx=cx+curve*(1-rp)*Math.sin(rp*Math.PI);
+    var rry=cy+R*0.52-rp*R*1.02;
+    rachisPts.push([rrx-rachisW,rry]);
+  }
+  for(var rs2=rsegs;rs2>=0;rs2--){
+    var rp2=rs2/rsegs;
+    var rrx2=cx+curve*(1-rp2)*Math.sin(rp2*Math.PI);
+    var rry2=cy+R*0.52-rp2*R*1.02;
+    rachisPts.push([rrx2+rachisW,rry2]);
+  }
+  polys.push({pts:rachisPts,zone:'rachis'});
+  zones.push({cx:cx,cy:cy,name:'rachis'});
+  return {polys:polys, zones:zones};
+}
+
+function buildMoth(cx,cy,R,s){
+  var polys=[], zones=[];
+  // upper wings — large, complex outline
+  for(var side=-1;side<=1;side+=2){
+    var wlobes=4+Math.floor(sr()*3);
+    var wSkX=1.1+sr()*0.2;
+    var wPts=organicPoly(
+      cx+side*R*0.42, cy-R*0.08,
+      R*0.46, wlobes, 0.10+sr()*0.12, wlobes,
+      wSkX, 0.88+sr()*0.1
+    );
+    // flatten inner edge toward body
+    wPts=wPts.map(function(p){
+      var dist=side*(p[0]-cx);
+      if(dist<R*0.1) p[0]=cx+side*R*0.06;
+      return p;
+    });
+    polys.push({pts:wPts, zone:'wing_upper'});
+    zones.push({cx:cx+side*R*0.42,cy:cy-R*0.08,name:'wing_upper'});
+
+    // lower wings — smaller, rounder, different lobe count
+    var lwPts=organicPoly(
+      cx+side*R*0.32, cy+R*0.32,
+      R*0.28, 3+Math.floor(sr()*2), 0.09+sr()*0.1, 5,
+      1.05+sr()*0.15, 0.85
+    );
+    lwPts=lwPts.map(function(p){
+      var dist=side*(p[0]-cx);
+      if(dist<R*0.05) p[0]=cx+side*R*0.04;
+      return p;
+    });
+    polys.push({pts:lwPts, zone:'wing_lower'});
+    zones.push({cx:cx+side*R*0.32,cy:cy+R*0.32,name:'wing_lower'});
+  }
+  // body: narrow tapered oval
+  var bodyPts=organicPoly(cx,cy,R*0.07,2,0.12,8,0.55,1.0);
+  polys.push({pts:bodyPts,zone:'body'});
+  zones.push({cx:cx,cy:cy,name:'body'});
+  return {polys:polys,zones:zones};
+}
+
+// ── Image contour extraction ──
+function getGray(data,x,y,w,h){
+  if(x<0||y<0||x>=w||y>=h) return 0;
+  var i=(y*w+x)*4;
+  return (data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114);
+}
+
+function sobelEdge(data,w,h){
+  var out=new Float32Array(w*h);
+  for(var y=1;y<h-1;y++){
+    for(var x=1;x<w-1;x++){
+      var gx=(-getGray(data,x-1,y-1,w,h)-2*getGray(data,x-1,y,w,h)-getGray(data,x-1,y+1,w,h)
+              +getGray(data,x+1,y-1,w,h)+2*getGray(data,x+1,y,w,h)+getGray(data,x+1,y+1,w,h));
+      var gy=(-getGray(data,x-1,y-1,w,h)-2*getGray(data,x,y-1,w,h)-getGray(data,x+1,y-1,w,h)
+              +getGray(data,x-1,y+1,w,h)+2*getGray(data,x,y+1,w,h)+getGray(data,x+1,y+1,w,h));
+      out[y*w+x]=Math.sqrt(gx*gx+gy*gy);
+    }
+  }
+  return out;
+}
+
+// Simple contour tracing: find largest connected edge region, walk boundary
+function traceContour(edgeMap,w,h,thresh){
+  // find start: leftmost strong edge pixel in middle band
+  var startX=-1,startY=-1;
+  var midY=Math.floor(h/2);
+  outer: for(var bw=0;bw<w;bw++){
+    for(var bh=Math.floor(h*0.1);bh<Math.floor(h*0.9);bh++){
+      if(edgeMap[bh*w+bw]>thresh){startX=bw;startY=bh;break outer;}
+    }
+  }
+  if(startX<0) return [];
+
+  // Moore neighborhood contour tracing
+  var dirs=[[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+  var pts=[], visited={};
+  var cx2=startX,cy2=startY,dir=0;
+  var maxPts=2000;
+  do {
+    pts.push([cx2,cy2]);
+    visited[cx2+','+cy2]=1;
+    var found=false;
+    for(var d=0;d<8;d++){
+      var nd=(dir+d)%8;
+      var nx2=cx2+dirs[nd][0], ny2=cy2+dirs[nd][1];
+      if(nx2>=0&&ny2>=0&&nx2<w&&ny2<h&&edgeMap[ny2*w+nx2]>thresh&&!visited[nx2+','+ny2]){
+        cx2=nx2;cy2=ny2;dir=nd;found=true;break;
+      }
+    }
+    if(!found) break;
+  } while((cx2!==startX||cy2!==startY)&&pts.length<maxPts);
+  return pts;
+}
+
+// Douglas-Peucker simplification
+function dpSimplify(pts,eps){
+  if(pts.length<3) return pts;
+  var dmax=0,idx=0;
+  var end=pts.length-1;
+  var x1=pts[0][0],y1=pts[0][1],x2=pts[end][0],y2=pts[end][1];
+  var len=Math.hypot(x2-x1,y2-y1)||1;
+  for(var i=1;i<end;i++){
+    var d=Math.abs((y2-y1)*pts[i][0]-(x2-x1)*pts[i][1]+x2*y1-y2*x1)/len;
+    if(d>dmax){dmax=d;idx=i;}
+  }
+  if(dmax>eps){
+    var r1=dpSimplify(pts.slice(0,idx+1),eps);
+    var r2=dpSimplify(pts.slice(idx),eps);
+    return r1.slice(0,-1).concat(r2);
+  }
+  return [pts[0],pts[end]];
+}
+
+// Moore contour trace for a given binary mask
+// Trace ONE contour starting from (sx,sy), mark visited pixels
+function mooreTraceSingle(mask,visited,iw,ih,sx,sy,simplifyEps){
+  var DX=[1,1,0,-1,-1,-1,0,1], DY=[0,-1,-1,-1,0,1,1,1];
+  function ok(x,y){ return x>=0&&y>=0&&x<iw&&y<ih&&mask[y*iw+x]; }
+  var contour=[], cx2=sx, cy2=sy, entryDir=4, steps=0;
+  do {
+    contour.push([cx2,cy2]);
+    visited[cy2*iw+cx2]=1;
+    var ss=(entryDir+5)%8, moved=false;
+    for(var di=0;di<8;di++){
+      var d=(ss+di)%8, nx2=cx2+DX[d], ny2=cy2+DY[d];
+      if(ok(nx2,ny2)){entryDir=d;cx2=nx2;cy2=ny2;moved=true;break;}
+    }
+    if(!moved) break;
+    steps++;
+  } while((cx2!==sx||cy2!==sy||steps<3)&&steps<8000);
+  if(contour.length<5) return null;
+  return simplifyEps>0?dpSimplify(contour,simplifyEps):contour;
+}
+
+// Extract ALL contours from a binary mask (flood-fill after each trace)
+function allContoursFromMask(mask,iw,ih,simplifyEps,minArea){
+  var visited=new Uint8Array(iw*ih);
+  var results=[];
+  for(var fy=1;fy<ih-1;fy++){
+    for(var fx=1;fx<iw-1;fx++){
+      if(!mask[fy*iw+fx]||visited[fy*iw+fx]) continue;
+      // check it's an edge pixel (next to empty)
+      var isEdge=(!mask[(fy-1)*iw+fx]||!mask[(fy+1)*iw+fx]||!mask[fy*iw+fx-1]||!mask[fy*iw+fx+1]);
+      if(!isEdge) continue;
+      var contour=mooreTraceSingle(mask,visited,iw,ih,fx,fy,simplifyEps);
+      if(contour&&contour.length>=4){
+        // estimate area via bounding box as proxy
+        var xs=contour.map(function(p){return p[0];}), ys=contour.map(function(p){return p[1];});
+        var area=(Math.max.apply(null,xs)-Math.min.apply(null,xs))*(Math.max.apply(null,ys)-Math.min.apply(null,ys));
+        if(area>=minArea) results.push(contour);
+      }
+    }
+  }
+  return results;
+}
+
+function mooreTrace(mask,iw,ih,simplifyEps){
+  var visited=new Uint8Array(iw*ih);
+  var DX=[1,1,0,-1,-1,-1,0,1], DY=[0,-1,-1,-1,0,1,1,1];
+  var sx=-1,sy=-1;
+  outer: for(var fy=0;fy<ih;fy++) for(var fx=0;fx<iw;fx++) if(mask[fy*iw+fx]){sx=fx;sy=fy;break outer;}
+  if(sx<0) return null;
+  return mooreTraceSingle(mask,visited,iw,ih,sx,sy,simplifyEps);
+}
+
+// Extract multi-layer contours from image
+// Returns array of {pts, zone, layerIdx, colorHex}
+function extractImageContour(img){
+  var maxDim=320;
+  var scale=Math.min(maxDim/img.width,maxDim/img.height,1);
+  var iw=Math.round(img.width*scale)||1, ih=Math.round(img.height*scale)||1;
+  imgOffscreen.width=iw; imgOffscreen.height=ih;
+  var oc=imgOffscreen.getContext('2d');
+  oc.drawImage(img,0,0,iw,ih);
+  var pxData=oc.getImageData(0,0,iw,ih).data;
+  var simplifyEps=parseInt(document.getElementById('sl-simplify').value);
+  var numLayers=parseInt(document.getElementById('sl-layers').value)||4;
+  var thresh=parseInt(document.getElementById('sl-thresh').value)||128;
+  var contrast=(parseInt(document.getElementById('sl-contrast').value)||10)/10;
+  var invert=document.getElementById('cb-invert').checked;
+
+  // grayscale
+  var gray=new Float32Array(iw*ih);
+  for(var pi=0;pi<iw*ih;pi++){
+    var a=pxData[pi*4+3]; if(a<64){gray[pi]=255;continue;}
+    gray[pi]=pxData[pi*4]*0.299+pxData[pi*4+1]*0.587+pxData[pi*4+2]*0.114;
+  }
+
+  // CLAHE: local contrast enhancement — divide into tiles, equalize each
+  var tileW=Math.max(4,Math.floor(iw/8)), tileH=Math.max(4,Math.floor(ih/8));
+  var clahe=new Float32Array(iw*ih);
+  for(var ty=0;ty<ih;ty+=tileH){
+    for(var tx=0;tx<iw;tx+=tileW){
+      // collect histogram for this tile
+      var hist=new Float32Array(256);
+      var cnt=0;
+      for(var ky=ty;ky<Math.min(ty+tileH,ih);ky++){
+        for(var kx=tx;kx<Math.min(tx+tileW,iw);kx++){
+          hist[Math.round(gray[ky*iw+kx])]++;
+          cnt++;
+        }
+      }
+      // clip histogram (CLAHE clip limit = 3x average)
+      var clip=cnt/256*3;
+      var excess=0;
+      for(var bi=0;bi<256;bi++){ if(hist[bi]>clip){excess+=hist[bi]-clip;hist[bi]=clip;} }
+      var add=excess/256;
+      for(var bi2=0;bi2<256;bi2++) hist[bi2]+=add;
+      // CDF
+      var cdf=new Float32Array(256); cdf[0]=hist[0];
+      for(var ci=1;ci<256;ci++) cdf[ci]=cdf[ci-1]+hist[ci];
+      var cdfMin=cdf[0], cdfMax=cdf[255]||1;
+      // apply to tile pixels
+      for(var ky2=ty;ky2<Math.min(ty+tileH,ih);ky2++){
+        for(var kx2=tx;kx2<Math.min(tx+tileW,iw);kx2++){
+          var idx=ky2*iw+kx2;
+          clahe[idx]=(cdf[Math.round(gray[idx])]-cdfMin)/(cdfMax-cdfMin)*255;
+        }
+      }
+    }
+  }
+
+  // apply global contrast + threshold + invert on top of CLAHE
+  var gmin=255,gmax=0;
+  for(var pi2=0;pi2<iw*ih;pi2++){
+    var v=clahe[pi2];
+    v=Math.max(0,Math.min(255,(v-thresh)*contrast+thresh));
+    if(invert) v=255-v;
+    gray[pi2]=v;
+    if(v<gmin)gmin=v; if(v>gmax)gmax=v;
+  }
+
+  // smooth contour: moving average to remove pixel-staircase artifacts
+  function smoothContour(pts, passes){
+    var p=pts.slice();
+    for(var pass=0;pass<passes;pass++){
+      var s=p.slice();
+      for(var i=0;i<p.length;i++){
+        var prev=s[(i-1+s.length)%s.length], next=s[(i+1)%s.length];
+        p[i]=[(s[i][0]+prev[0]+next[0])/3, (s[i][1]+prev[1]+next[1])/3];
+      }
+    }
+    return p;
+  }
+
+  // build layers: non-uniform gamma — concentrate in midtones
+  var layers=[];
+  var range=gmax-gmin||1;
+  var zoneNames=['cap','stem','wing_upper','wing_lower','body','rachis'];
+  var minArea=Math.max(4,(iw*ih)*0.0008); // ignore tiny noise blobs
+  var smoothPasses=simplifyEps>3?1:3;
+
+  for(var li=0;li<numLayers;li++){
+    var t1=Math.pow((li+1)/numLayers, 0.7);
+    var hi=gmin+range*t1;
+    var mask=new Uint8Array(iw*ih);
+    for(var pi2=0;pi2<iw*ih;pi2++) mask[pi2]=gray[pi2]<=hi?1:0;
+
+    // get ALL contours in this layer (outer + inner features like eyes/nose)
+    var contours=allContoursFromMask(mask,iw,ih,simplifyEps>0?simplifyEps:0.5,minArea);
+    contours.forEach(function(contour){
+      var smoothed=smoothContour(contour,smoothPasses);
+      layers.push({pts:smoothed, zone:zoneNames[li%zoneNames.length], layerIdx:li});
+    });
+  }
+
+  document.getElementById('contour-status').textContent=layers.length+' contours extracted';
+  return layers.length>0?layers:null;
+}
+
+function buildImageShape(cx,cy,R,layers){
+  if(!layers||!layers.length) return buildFungi(cx,cy,R);
+  // get bounding box across all layers
+  var allPts=[]; layers.forEach(function(l){allPts=allPts.concat(l.pts);});
+  var xs=allPts.map(function(p){return p[0];}), ys=allPts.map(function(p){return p[1];});
+  var minX=Math.min.apply(null,xs),maxX=Math.max.apply(null,xs);
+  var minY=Math.min.apply(null,ys),maxY=Math.max.apply(null,ys);
+  var sc=Math.min(2*R*0.88/(maxX-minX||1), 2*R*0.88/(maxY-minY||1));
+  var offX=cx-(minX+maxX)/2*sc, offY=cy-(minY+maxY)/2*sc;
+  function norm(pts){ return pts.map(function(p){return [p[0]*sc+offX,p[1]*sc+offY];}); }
+  var polys=[], zones=[];
+  layers.forEach(function(l){
+    polys.push({pts:norm(l.pts), zone:l.zone});
+    zones.push({cx:cx,cy:cy,name:l.zone});
+  });
+  return {polys:polys, zones:zones};
+}
+
+function buildShape(cx,cy,R,shape){
+  if(shape==='fungi') return buildFungi(cx,cy,R);
+  if(shape==='fern') return buildFern(cx,cy,R);
+  if(shape==='moth') return buildMoth(cx,cy,R);
+  if(shape==='text'){
+    var txt=document.getElementById('inp-text').value||'AB';
+    return buildText(cx,cy,R,txt);
+  }
+  if(shape==='image'){
+    if(imgContourData) return buildImageShape(cx,cy,R,imgContourData);
+    return buildFungi(cx,cy,R); // fallback until image loaded
+  }
+  return buildFungi(cx,cy,R);
+}
+
+function inShape(x,y,cx,cy,R,shape,shapeData){
+  if(!shapeData) return false;
+  for(var i=0;i<shapeData.polys.length;i++){
+    if(ptInPoly(x,y,shapeData.polys[i].pts)) return shapeData.polys[i].zone;
+  }
+  return false;
+}
+
+
+// ── Generate mesh nodes inside shape ──
+function buildMesh(cx,cy,R,shape,meshDensity,stitchType,shapeData){
+  var spacing = R/(3+meshDensity*1.4);
+  var nodes = [], edges = [];
+  var nodeMap = {};
+
+  if(stitchType==='hex'){
+    var rowH = spacing*0.866;
+    for(var row=-Math.ceil(R/rowH)-1; row<Math.ceil(R/rowH)+1; row++){
+      var offset = (row%2===0)?0:spacing*0.5;
+      for(var col=-Math.ceil(R/spacing)-1; col<Math.ceil(R/spacing)+1; col++){
+        var nx=cx+col*spacing+offset, ny=cy+row*rowH;
+        var zone=inShape(nx,ny,cx,cy,R,shape,shapeData);
+        if(zone){
+          var id=nodes.length;
+          nodes.push({x:nx,y:ny,zone:zone,id:id});
+          nodeMap[row+'_'+col]=id;
+        }
+      }
+    }
+    // hex edges: connect neighbors
+    var dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+    var diagDirs=[[1,1],[1,-1],[-1,1],[-1,-1]];
+    nodes.forEach(function(n,i){
+      // find nearby nodes by distance
+      nodes.forEach(function(m,j){
+        if(j<=i) return;
+        var d=Math.hypot(m.x-n.x,m.y-n.y);
+        if(d<spacing*1.25) edges.push([i,j,d]);
+      });
+    });
+  } else if(stitchType==='diamond'){
+    var ds=spacing;
+    for(var r2=-Math.ceil(R/ds)-1;r2<Math.ceil(R/ds)+1;r2++){
+      for(var c2=-Math.ceil(R/ds)-1;c2<Math.ceil(R/ds)+1;c2++){
+        var nx2,ny2;
+        // diamond grid: offset alternating
+        nx2=cx+(c2+r2*0.5)*ds; ny2=cy+r2*ds*0.866;
+        var zone2=inShape(nx2,ny2,cx,cy,R,shape,shapeData);
+        if(zone2){
+          var id2=nodes.length;
+          nodes.push({x:nx2,y:ny2,zone:zone2,id:id2});
+        }
+      }
+    }
+    nodes.forEach(function(n,i){
+      nodes.forEach(function(m,j){
+        if(j<=i) return;
+        var d2=Math.hypot(m.x-n.x,m.y-n.y);
+        if(d2<spacing*1.3) edges.push([i,j,d2]);
+      });
+    });
+  } else {
+    // random scattered nodes
+    var attempts=0, maxAttempts=3000;
+    var minDist=spacing*0.6;
+    while(nodes.length<(R*R*3.14/(spacing*spacing)*0.6) && attempts<maxAttempts){
+      attempts++;
+      var nx3=cx+(sr()-0.5)*R*2.1, ny3=cy+(sr()-0.5)*R*2.1;
+      var zone3=inShape(nx3,ny3,cx,cy,R,shape,shapeData);
+      if(!zone3) continue;
+      var ok=true;
+      for(var ni=0;ni<nodes.length;ni++){
+        if(Math.hypot(nodes[ni].x-nx3,nodes[ni].y-ny3)<minDist){ok=false;break;}
+      }
+      if(ok) nodes.push({x:nx3,y:ny3,zone:zone3,id:nodes.length});
+    }
+    nodes.forEach(function(n,i){
+      nodes.forEach(function(m,j){
+        if(j<=i) return;
+        var d3=Math.hypot(m.x-n.x,m.y-n.y);
+        if(d3<spacing*1.8) edges.push([i,j,d3]);
+      });
+    });
+  }
+  return {nodes:nodes, edges:edges, spacing:spacing};
+}
+
+// ── Draw one stitch edge ──
+function drawStitch(x1,y1,x2,y2,weight,col,tight,sagMult){
+  var straight=document.getElementById('cb-straight').checked;
+  var drape=parseInt(document.getElementById('sl-drape').value)||0;
+  var sag=Math.pow(1-tight/10,0.7)*8*(sagMult||1);
+
+  // drape: randomly extend some lines downward and break them
+  if(drape>0 && sr()<drape*0.08){
+    var dropLen=(y2-y1+Math.abs(x2-x1))*0.5*(1+sr()*drape*0.6);
+    var breakAt=0.4+sr()*0.4; // where the line "snaps"
+    ctx.strokeStyle=col; ctx.lineWidth=weight*0.7; ctx.globalAlpha=0.5+sr()*0.3;
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    // falls straight down from break point
+    var bx2=x1+(x2-x1)*breakAt, by2=y1+(y2-y1)*breakAt;
+    ctx.lineTo(bx2,by2);
+    ctx.lineTo(bx2+( sr()-0.5)*8, by2+dropLen);
+    ctx.stroke();
+    ctx.globalAlpha=1;
+    return;
+  }
+
+  ctx.strokeStyle=col; ctx.lineWidth=weight;
+  ctx.beginPath(); ctx.moveTo(x1,y1);
+  if(straight){
+    ctx.lineTo(x2,y2);
+  } else {
+    var mx=(x1+x2)/2, my=(y1+y2)/2;
+    var perp=Math.atan2(y2-y1,x2-x1)+Math.PI/2;
+    var bx=mx+Math.cos(perp)*sag, by=my+Math.sin(perp)*sag;
+    ctx.quadraticCurveTo(bx,by,x2,y2);
+  }
+  ctx.stroke();
+}
+
+// ── Draw knot at node ──
+function drawKnot(x,y,r,col){
+  ctx.fillStyle=col;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+}
+
+// ── Draw stray thread end ──
+// ── Flow Field (lightweight Perlin-style using trig) ──
+// Returns angle at (x,y) — multi-frequency noise via overlapping sin waves
+var FF_SEED=0;
+function flowAngle(x,y){
+  var s=FF_SEED;
+  // 3 frequency layers, each rotated by seed
+  var f1=Math.sin(x*0.008+s*0.7)*Math.cos(y*0.006+s*0.4);
+  var f2=Math.sin(x*0.018+y*0.013+s*1.3)*0.5;
+  var f3=Math.cos(x*0.035+y*0.028+s*2.1)*0.25;
+  return (f1+f2+f3)*Math.PI*2;
+}
+
+function drawStray(x,y,ang,len,weight,col,tOffset){
+  var pts=[[x,y]];
+  var cx2=x, cy2=y;
+  var segs=6+Math.floor(sr()*4);
+  var segLen=len/segs;
+
+  // start angle: blend between random ang and flow field direction
+  var fieldAng=flowAngle(x,y);
+  // mix: 0.6 flow field, 0.4 original random direction
+  var ca=fieldAng*0.6+ang*0.4;
+  if(animating && tOffset) ca+=Math.sin(animT*0.8+tOffset)*0.4;
+
+  for(var i=0;i<segs;i++){
+    var t=i/segs;
+    // re-sample flow field at current position, stronger influence as tip goes further
+    var localField=flowAngle(cx2,cy2);
+    ca=ca*0.65+localField*0.35 + (sr()-0.5)*0.5;
+    // taper: tip sways more in animation
+    var sway=animating?Math.sin(animT*1.2+(tOffset||0)*2.3+i*0.4)*t*len*0.1:0;
+    cx2+=Math.cos(ca)*segLen+sway;
+    cy2+=Math.sin(ca)*segLen;
+    pts.push([cx2,cy2]);
+  }
+
+  // taper alpha: brighter at base, fades at tip
+  ctx.strokeStyle=col; ctx.lineWidth=weight*0.6;
+  ctx.lineCap='round';
+  for(var p=1;p<pts.length;p++){
+    var a=0.55*(1-p/pts.length)+0.1;
+    ctx.globalAlpha=a;
+    ctx.beginPath(); ctx.moveTo(pts[p-1][0],pts[p-1][1]); ctx.lineTo(pts[p][0],pts[p][1]); ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  var tip=pts[pts.length-1];
+  return {x:tip[0], y:tip[1], col:col, baseX:x, baseY:y};
+}
+
+// ── Zone → color index ──
+function zoneColor(zone, pal){
+  if(zone==='cap'||zone==='wing_upper'||zone==='pinna_a') return pal[0];
+  if(zone==='stem'||zone==='body'||zone==='rachis'||zone==='pinna_b') return pal[1];
+  if(zone==='wing_lower') return pal[2]||pal[0];
+  return pal[0];
+}
+
+// ── Main draw ──
+// ── Image lace: draw each contour layer as a lace thread ──
+// Draw random triangle mesh fill over a contour polygon
+function drawTriFill(pts, col, density, tw){
+  if(pts.length<3||density<=0) return;
+  // pick random points on contour as triangle vertices
+  var n=pts.length;
+  var numTri=Math.floor(density*pts.length*0.08);
+  ctx.strokeStyle=col; ctx.lineWidth=tw*0.35;
+  for(var ti=0;ti<numTri;ti++){
+    var i0=Math.floor(sr()*n), i1=Math.floor(sr()*n), i2=Math.floor(sr()*n);
+    if(i0===i1||i1===i2||i0===i2) continue;
+    var p0=pts[i0],p1=pts[i1],p2=pts[i2];
+    // only draw if triangle is small enough (avoid huge spanning triangles)
+    var maxEdge=Math.max(Math.hypot(p1[0]-p0[0],p1[1]-p0[1]),
+                         Math.hypot(p2[0]-p1[0],p2[1]-p1[1]),
+                         Math.hypot(p0[0]-p2[0],p0[1]-p2[1]));
+    if(maxEdge>pts.length*0.25) continue;
+    ctx.globalAlpha=0.12+sr()*0.1;
+    ctx.beginPath(); ctx.moveTo(p0[0],p0[1]); ctx.lineTo(p1[0],p1[1]); ctx.lineTo(p2[0],p2[1]); ctx.closePath();
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+
+// Draw the "running thread" — a wandering line between anchor points
+// like the loose thread connecting embroidered letters in the poster
+function drawRunningThread(anchors, col, lw){
+  if(anchors.length<2) return;
+  ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.globalAlpha=0.5;
+
+  // build a smooth catmull-rom-style path through all waypoints first
+  var allWpts=[anchors[0]];
+  for(var ai=1;ai<anchors.length;ai++){
+    var prev=anchors[ai-1], curr=anchors[ai];
+    var dx=curr[0]-prev[0], dy=curr[1]-prev[1];
+    var dist=Math.hypot(dx,dy);
+    var perp=Math.atan2(dy,dx)+Math.PI/2;
+    // 3-5 waypoints with generous sag/wander
+    var waypts=3+Math.floor(sr()*3);
+    for(var wi=0;wi<waypts;wi++){
+      var wt=(wi+1)/(waypts+1);
+      var bx=prev[0]+dx*wt, by=prev[1]+dy*wt;
+      // sag: bias downward (positive y), more in the middle of the span
+      var sagAmt=dist*(0.25+sr()*0.45)*Math.sin(wt*Math.PI); // arc shape
+      var wanderAmt=(sr()-0.5)*dist*0.35;
+      var wx=bx+Math.cos(perp)*wanderAmt;
+      var wy=by+Math.sin(perp)*wanderAmt+sagAmt; // gravity pulls down
+      allWpts.push([wx,wy]);
+    }
+    allWpts.push(curr);
+  }
+
+  // draw as one smooth cubic bezier chain
+  ctx.beginPath();
+  ctx.moveTo(allWpts[0][0], allWpts[0][1]);
+  for(var pi=1;pi<allWpts.length-1;pi++){
+    // smooth through each point using midpoint control
+    var mx=(allWpts[pi][0]+allWpts[pi+1][0])/2;
+    var my=(allWpts[pi][1]+allWpts[pi+1][1])/2;
+    ctx.quadraticCurveTo(allWpts[pi][0], allWpts[pi][1], mx, my);
+  }
+  ctx.lineTo(allWpts[allWpts.length-1][0], allWpts[allWpts.length-1][1]);
+  ctx.stroke();
+
+  // small thread loop at each anchor (not waypoints)
+  for(var li=0;li<anchors.length;li++){
+    var ax=anchors[li][0], ay=anchors[li][1];
+    ctx.globalAlpha=0.35;
+    ctx.beginPath();
+    // teardrop loop: a small oval rotated randomly
+    var loopAngle=sr()*Math.PI*2;
+    ctx.ellipse(ax+Math.cos(loopAngle)*lw*1.5, ay+Math.sin(loopAngle)*lw*1.5,
+                lw*2.5, lw*1.2, loopAngle, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawImageLace(cx,cy,R,layers,pal,tw,tight,loose,looseSag,looseStray,stray,mesh){
+  var n=layers.length;
+  var allPts=[]; layers.forEach(function(l){allPts=allPts.concat(l.pts);});
+  var xs=allPts.map(function(p){return p[0];}), ys=allPts.map(function(p){return p[1];});
+  var minX=Math.min.apply(null,xs),maxX=Math.max.apply(null,xs);
+  var minY=Math.min.apply(null,ys),maxY=Math.max.apply(null,ys);
+  var sc=Math.min(2*R*0.9/(maxX-minX||1),2*R*0.9/(maxY-minY||1));
+  var offX=cx-(minX+maxX)/2*sc, offY=cy-(minY+maxY)/2*sc;
+  function toCanvas(p){
+    // loose: jitter each point slightly
+    var jx=loose>0?(sr()-0.5)*loose*sc*0.04:0;
+    var jy=loose>0?(sr()-0.5)*loose*sc*0.04:0;
+    return [p[0]*sc+offX+jx, p[1]*sc+offY+jy];
+  }
+
+  var strayTips=[];
+
+  layers.forEach(function(layer,li){
+    var pts=layer.pts.map(toCanvas);
+    if(pts.length<3) return;
+    var t=li/(n-1||1);
+    // color: smooth 3-stop gradient across layers
+    var col=li<n*0.35?pal[0]:(li<n*0.65?pal[1]:(pal[2]||pal[1]));
+    // weight: dark layers heavier, light layers fine
+    var lw=tw*(1.6-t*1.1);
+    // alpha: dark layers solid, light layers translucent (layering effect)
+    var alpha=0.75-t*0.35;
+
+    // draw thread: skip points based on mesh (higher mesh = more detailed)
+    var step=Math.max(1,Math.floor((11-mesh)*0.5));
+    ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.globalAlpha=alpha;
+    ctx.beginPath();
+    var straight=document.getElementById('cb-straight').checked;
+    var drape=parseInt(document.getElementById('sl-drape').value)||0;
+    ctx.moveTo(pts[0][0],pts[0][1]);
+    for(var pi=step;pi<pts.length;pi+=step){
+      var prev=pts[pi-step]||pts[0], curr=pts[pi];
+      // drape: occasional line falls down and breaks
+      if(drape>0 && sr()<drape*0.06){
+        var dropLen=(sr()*drape*sc*0.8+sc*0.3);
+        var bpx=prev[0]+(curr[0]-prev[0])*0.5, bpy=prev[1]+(curr[1]-prev[1])*0.5;
+        ctx.lineTo(bpx,bpy);
+        ctx.stroke(); ctx.beginPath();
+        ctx.globalAlpha=alpha*0.4;
+        ctx.moveTo(bpx,bpy);
+        ctx.lineTo(bpx+(sr()-0.5)*sc*0.3, bpy+dropLen);
+        ctx.stroke(); ctx.beginPath();
+        ctx.globalAlpha=alpha;
+        ctx.moveTo(curr[0],curr[1]);
+        continue;
+      }
+      if(straight){
+        ctx.lineTo(curr[0],curr[1]);
+      } else {
+        var mx=(prev[0]+curr[0])/2, my=(prev[1]+curr[1])/2;
+        var sag=Math.pow(1-tight/10,0.7)*looseSag*(sc*2.2);
+        var perp=Math.atan2(curr[1]-prev[1],curr[0]-prev[0])+Math.PI/2;
+        ctx.quadraticCurveTo(mx+Math.cos(perp)*sag, my+Math.sin(perp)*sag, curr[0],curr[1]);
+      }
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.globalAlpha=1;
+
+    // knots: density from mesh
+    var knotEvery=Math.max(1,Math.floor(pts.length/(mesh*2+4)));
+    for(var ki=0;ki<pts.length;ki+=knotEvery){
+      ctx.fillStyle=col;
+      ctx.globalAlpha=alpha*0.85;
+      ctx.beginPath(); ctx.arc(pts[ki][0],pts[ki][1],lw*1.2,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+
+    // triangle mesh fill (random, sparse, only on larger contours)
+    if(mesh>4 && pts.length>12){
+      drawTriFill(pts, col, mesh-4, tw);
+    }
+
+    // stray ends
+    if(stray>0){
+      var strayEvery=Math.max(2,Math.floor(pts.length/(stray*2)));
+      for(var si=0;si<pts.length;si+=strayEvery){
+        var ang=sr()*Math.PI*2;
+        var len=sc*(1.5+sr()*looseStray*0.6);
+        var tip=drawStray(pts[si][0],pts[si][1],ang,len,lw*0.6,col,pts[si][0]*0.01+pts[si][1]*0.007);
+        if(tip) strayTips.push(tip);
+      }
+    }
+  });
+
+  // synapse connections
+  var synapseThresh=sc*5;
+  ctx.lineCap='round';
+  for(var ti=0;ti<strayTips.length;ti++){
+    for(var tj=ti+1;tj<strayTips.length;tj++){
+      var ta=strayTips[ti],tb=strayTips[tj];
+      if(Math.hypot(ta.baseX-tb.baseX,ta.baseY-tb.baseY)<sc*1.5) continue;
+      var dist=Math.hypot(ta.x-tb.x,ta.y-tb.y);
+      if(dist>synapseThresh) continue;
+      var a2=Math.pow(1-dist/synapseThresh,2)*0.4;
+      var mx2=(ta.x+tb.x)/2,my2=(ta.y+tb.y)/2;
+      var px2=-(tb.y-ta.y)*0.18,py2=(tb.x-ta.x)*0.18;
+      ctx.strokeStyle=ta.col; ctx.lineWidth=tw*0.3; ctx.globalAlpha=a2;
+      ctx.beginPath(); ctx.moveTo(ta.x,ta.y);
+      ctx.quadraticCurveTo(mx2+px2,my2+py2,tb.x,tb.y); ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+  }
+
+  // ── Running thread: one continuous wandering line connecting all contour groups ──
+  // collect one anchor point per layer-group (use a point near the bottom-right of each contour)
+  var anchors=[];
+  var seenLayers={};
+  layers.forEach(function(layer){
+    if(seenLayers[layer.layerIdx]) return;
+    seenLayers[layer.layerIdx]=1;
+    var pts=layer.pts;
+    if(!pts||pts.length<2) return;
+    // pick a point near the bottom of this contour
+    var sorted=pts.slice().sort(function(a,b){return b[1]-a[1];});
+    var rawPt=sorted[Math.floor(sorted.length*0.15)];
+    // normalise to canvas
+    var allPts2=[]; layers.forEach(function(l){allPts2=allPts2.concat(l.pts);});
+    var xs2=allPts2.map(function(p){return p[0];}), ys2=allPts2.map(function(p){return p[1];});
+    var minX2=Math.min.apply(null,xs2),maxX2=Math.max.apply(null,xs2);
+    var minY2=Math.min.apply(null,ys2),maxY2=Math.max.apply(null,ys2);
+    var sc2=Math.min(2*R*0.9/(maxX2-minX2||1),2*R*0.9/(maxY2-minY2||1));
+    var offX2=cx-(minX2+maxX2)/2*sc2, offY2=cy-(minY2+maxY2)/2*sc2;
+    anchors.push([rawPt[0]*sc2+offX2, rawPt[1]*sc2+offY2]);
+  });
+  drawRunningThread(anchors, pal[1]||pal[0], tw*0.55);
+}
+
+function draw(){
+  reseed(seed);
+  var shape=document.getElementById('sel-shape').value;
+  var size=parseInt(document.getElementById('sl-size').value);
+  var mesh=parseInt(document.getElementById('sl-mesh').value);
+  var tight=parseInt(document.getElementById('sl-tight').value);
+  var loose=parseInt(document.getElementById('sl-loose').value);
+  var stitch=document.getElementById('sel-stitch').value;
+  var weight=parseInt(document.getElementById('sl-weight').value);
+  var stray=parseInt(document.getElementById('sl-stray').value);
+  var bg=document.getElementById('col-bg').value;
+  var pal=PALETTES[activePalette];
+
+  var R=size*32;
+  var cx=W/2, cy=H/2+10;
+  var tw=weight*0.12+0.35;
+  var looseSag=1+loose*0.35;
+  var looseStray=stray*(1+loose*0.4);
+
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+
+  // ── Image mode: draw contour lines as lace threads ──
+  if(shape==='image' && imgContourData && imgContourData.length){
+    drawImageLace(cx,cy,R,imgContourData,pal,tw,tight,loose,looseSag,looseStray,stray,mesh);
+    if(animating){ raf=requestAnimationFrame(draw); } return;
+  }
+
+  var shapeData=buildShape(cx,cy,R,shape);
+  var looseMesh=Math.max(1,mesh-Math.floor(loose*0.5));
+  var mesh2=buildMesh(cx,cy,R,shape,looseMesh,stitch,shapeData);
+  var nodes=mesh2.nodes, edges=mesh2.edges, spacing=mesh2.spacing;
+
+  // apply node jitter for loose feel
+  if(loose>0){
+    nodes.forEach(function(n){
+      n.x+=(sr()-0.5)*loose*spacing*0.18;
+      n.y+=(sr()-0.5)*loose*spacing*0.18;
+    });
+  }
+
+  // find boundary nodes (nodes with fewer connections = edge of shape)
+  var connCount=new Array(nodes.length).fill(0);
+  edges.forEach(function(e){ connCount[e[0]]++; connCount[e[1]]++; });
+  var maxConn=Math.max.apply(null,connCount)||1;
+
+  // draw stray thread ends — collect tips for synapse pass
+  var strayTips=[];
+  if(stray>0){
+    nodes.forEach(function(n,i){
+      var isBoundary = connCount[i] < maxConn*0.55;
+      if(!isBoundary) return;
+      var numStrays=Math.floor(sr()*looseStray*0.4+0.5);
+      for(var s=0;s<numStrays;s++){
+        var ang=sr()*Math.PI*2;
+        var len=spacing*(1.2+sr()*looseStray*0.35);
+        var col=zoneColor(n.zone,pal);
+        var tip=drawStray(n.x,n.y,ang,len,tw,col, n.x*0.01+n.y*0.007);
+        if(tip) strayTips.push(tip);
+      }
+    });
+  }
+
+  // ── Synapse connections: tips that nearly touch snap together ──
+  var synapseThresh = spacing*(2.8+looseStray*0.5);
+  ctx.lineCap='round';
+  for(var ti=0;ti<strayTips.length;ti++){
+    for(var tj=ti+1;tj<strayTips.length;tj++){
+      var ta=strayTips[ti], tb=strayTips[tj];
+      // skip same-origin nodes (avoid connecting within same cluster)
+      if(Math.hypot(ta.baseX-tb.baseX,ta.baseY-tb.baseY)<spacing*1.5) continue;
+      var dist=Math.hypot(ta.x-tb.x,ta.y-tb.y);
+      if(dist>synapseThresh) continue;
+      // fade by distance — close = strong, far = faint
+      var alpha=Math.pow(1-dist/synapseThresh,1.8)*0.55;
+      var mx=(ta.x+tb.x)/2, my=(ta.y+tb.y)/2;
+      // arc control point — slight perpendicular bow
+      var perpX=-(tb.y-ta.y)*0.2, perpY=(tb.x-ta.x)*0.2;
+      ctx.strokeStyle=ta.col;
+      ctx.lineWidth=tw*0.4;
+      ctx.globalAlpha=alpha;
+      ctx.beginPath();
+      ctx.moveTo(ta.x,ta.y);
+      ctx.quadraticCurveTo(mx+perpX,my+perpY,tb.x,tb.y);
+      ctx.stroke();
+      // tiny knot at connection point
+      ctx.fillStyle=tb.col;
+      ctx.globalAlpha=alpha*0.8;
+      ctx.beginPath();
+      ctx.arc(mx+perpX*0.5,my+perpY*0.5,tw*0.7,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1;
+
+  // draw edges (stitches)
+  edges.forEach(function(e){
+    var n1=nodes[e[0]], n2=nodes[e[1]];
+    var midZone=n1.zone;
+    var col=zoneColor(midZone,pal);
+    ctx.globalAlpha=0.72+sr()*0.18;
+    drawStitch(n1.x,n1.y,n2.x,n2.y,tw,col,tight,looseSag);
+    ctx.globalAlpha=1;
+  });
+
+  // draw knots at nodes
+  var knotR=tw*1.3;
+  nodes.forEach(function(n){
+    var col=zoneColor(n.zone,pal);
+    ctx.globalAlpha=0.6+sr()*0.3;
+    drawKnot(n.x,n.y,knotR,col);
+    ctx.globalAlpha=1;
+  });
+
+  // triangle mesh fill on boundary regions
+  if(mesh>4 && shapeData){
+    shapeData.polys.forEach(function(poly){
+      var col=zoneColor(poly.zone,pal);
+      drawTriFill(poly.pts,col,mesh-4,tw);
+    });
+  }
+
+  // running thread connecting shape zones
+  if(shapeData && shapeData.polys.length>1){
+    var anchors=shapeData.polys.map(function(poly){
+      var pts=poly.pts;
+      var sorted=pts.slice().sort(function(a,b){return b[1]-a[1];});
+      return sorted[Math.floor(sorted.length*0.1)];
+    });
+    drawRunningThread(anchors, pal[1]||pal[0], tw*0.55);
+  }
+}
+
+// ── Color swatch UI ──
+function buildSwatches(){
+  var wrap=document.getElementById('color-swatches');
+  wrap.innerHTML='';
+  PALETTES.forEach(function(pal,pi){
+    var group=document.createElement('div');
+    group.className='swatch-group'+(pi===activePalette?' active':'');
+    group.dataset.pi=pi;
+    pal.forEach(function(c){
+      var s=document.createElement('div');
+      s.className='swatch-dot';
+      s.style.background=c;
+      group.appendChild(s);
+    });
+    group.addEventListener('click',function(){
+      activePalette=pi;
+      document.querySelectorAll('.swatch-group').forEach(function(g,gi){
+        g.classList.toggle('active',gi===pi);
+      });
+      if(!animating)draw();
+    });
+    wrap.appendChild(group);
+  });
+}
+
+buildSwatches();
+
+// theme toggle
+document.getElementById('btn-theme').addEventListener('click',function(){
+  var html=document.documentElement;
+  html.dataset.theme=html.dataset.theme==='dark'?'':'dark';
+});
+
+// sliders
+['sl-size','sl-mesh','sl-tight','sl-loose','sl-weight','sl-stray','sl-aspeed','sl-drape'].forEach(function(id){
+  var el=document.getElementById(id);
+  var vl=document.getElementById('vl-'+id.replace('sl-',''));
+  el.addEventListener('input',function(){ if(vl)vl.textContent=el.value; if(!animating)draw(); });
+});
+['sel-shape','sel-stitch','col-bg'].forEach(function(id){
+  document.getElementById(id).addEventListener('change',function(){
+    var val=document.getElementById('sel-shape').value;
+    document.getElementById('text-input-row').style.display=val==='text'?'flex':'none';
+    document.getElementById('image-upload-row').style.display=val==='image'?'block':'none';
+    if(!animating)draw();
+  });
+});
+document.getElementById('inp-text').addEventListener('input',function(){ if(!animating)draw(); });
+
+// image upload
+document.getElementById('inp-image').addEventListener('change',function(e){
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      document.getElementById('preview-img').src=ev.target.result;
+      document.getElementById('upload-preview').style.display='block';
+      document.getElementById('upload-label').querySelector('span').textContent='↺ Change image';
+      // auto-switch shape selector to image
+      document.getElementById('sel-shape').value='image';
+      imgContourData=extractImageContour(img);
+      if(!animating)draw();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+['sl-layers','sl-simplify','sl-thresh','sl-contrast'].forEach(function(id){
+  var el=document.getElementById(id);
+  var vl=document.getElementById('vl-'+id.replace('sl-',''));
+  el.addEventListener('input',function(){
+    if(vl) vl.textContent=el.value;
+    var previewImg=document.getElementById('preview-img');
+    if(previewImg.src&&imgContourData){
+      var img=new Image(); img.src=previewImg.src;
+      imgContourData=extractImageContour(img);
+      if(!animating)draw();
+    }
+  });
+});
+
+document.getElementById('btn-regen').addEventListener('click',function(){
+  seed=Math.random()*999999|0; if(!animating)draw();
+});
+document.getElementById('btn-export').addEventListener('click',function(){
+  var wasAnim=animating; stopAnim();
+  draw();
+  setTimeout(function(){
+    var a=document.createElement('a'); a.href=cv.toDataURL('image/png');
+    a.download='laceit.png'; a.click();
+    if(wasAnim) startAnim();
+  },80);
+});
+
+// ── SVG export ──
+function makeSVGCtx(W,H){
+  var ops=[];
+  var _strokeStyle='#000',_fillStyle='#000',_lineWidth=1,_globalAlpha=1,_lineCap='butt',_lineJoin='miter';
+  var _path=[];
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+  function strokeAttr(){
+    var a=_globalAlpha<1?' stroke-opacity="'+_globalAlpha.toFixed(3)+'"':'';
+    return 'stroke="'+esc(_strokeStyle)+'"'+a+' stroke-width="'+_lineWidth.toFixed(2)+'" stroke-linecap="'+_lineCap+'" fill="none"';
+  }
+  function fillAttr(){
+    var a=_globalAlpha<1?' fill-opacity="'+_globalAlpha.toFixed(3)+'"':'';
+    return 'fill="'+esc(_fillStyle)+'"'+a+' stroke="none"';
+  }
+  var proxy={
+    get strokeStyle(){return _strokeStyle;}, set strokeStyle(v){_strokeStyle=v;},
+    get fillStyle(){return _fillStyle;}, set fillStyle(v){_fillStyle=v;},
+    get lineWidth(){return _lineWidth;}, set lineWidth(v){_lineWidth=v;},
+    get globalAlpha(){return _globalAlpha;}, set globalAlpha(v){_globalAlpha=v;},
+    get lineCap(){return _lineCap;}, set lineCap(v){_lineCap=v;},
+    get lineJoin(){return _lineJoin;}, set lineJoin(v){_lineJoin=v;},
+    save:function(){}, restore:function(){},
+    beginPath:function(){_path=[];},
+    moveTo:function(x,y){_path.push('M'+x.toFixed(1)+','+y.toFixed(1));},
+    lineTo:function(x,y){_path.push('L'+x.toFixed(1)+','+y.toFixed(1));},
+    quadraticCurveTo:function(cx,cy,x,y){_path.push('Q'+cx.toFixed(1)+','+cy.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1));},
+    bezierCurveTo:function(c1x,c1y,c2x,c2y,x,y){_path.push('C'+c1x.toFixed(1)+','+c1y.toFixed(1)+' '+c2x.toFixed(1)+','+c2y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1));},
+    arc:function(x,y,r,s,e){
+      // emit as SVG circle arc using A command
+      if(Math.abs(e-s)>=Math.PI*1.99){
+        // full circle
+        ops.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r.toFixed(1)+'" '+strokeAttr()+'/>');
+        return;
+      }
+      var x1=(x+Math.cos(s)*r).toFixed(1), y1=(y+Math.sin(s)*r).toFixed(1);
+      var x2=(x+Math.cos(e)*r).toFixed(1), y2=(y+Math.sin(e)*r).toFixed(1);
+      var large=Math.abs(e-s)>Math.PI?1:0;
+      _path.push('M'+x1+','+y1+' A'+r.toFixed(1)+','+r.toFixed(1)+' 0 '+large+',1 '+x2+','+y2);
+    },
+    ellipse:function(x,y,rx,ry,rot){
+      ops.push('<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="'+rx.toFixed(1)+'" ry="'+ry.toFixed(1)+'" transform="rotate('+(rot*180/Math.PI).toFixed(1)+','+x.toFixed(1)+','+y.toFixed(1)+')" '+strokeAttr()+'/>');
+    },
+    closePath:function(){_path.push('Z');},
+    stroke:function(){
+      if(!_path.length) return;
+      ops.push('<path d="'+_path.join(' ')+'" '+strokeAttr()+'/>');
+      _path=[];
+    },
+    fill:function(){
+      if(!_path.length) return;
+      ops.push('<path d="'+_path.join(' ')+'" '+fillAttr()+'/>');
+      _path=[];
+    },
+    fillRect:function(x,y,w,h){
+      ops.push('<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" '+fillAttr()+'/>');
+    },
+    clearRect:function(){},
+    getOps:function(){return ops;}
+  };
+  return proxy;
+}
+
+document.getElementById('btn-svg').addEventListener('click',function(){
+  var wasAnim=animating; stopAnim();
+  // swap ctx to SVG proxy, redraw, restore
+  var realCtx=ctx;
+  var W=cv.width, H=cv.height;
+  var svgCtx=makeSVGCtx(W,H);
+  ctx=svgCtx;
+  draw();
+  ctx=realCtx;
+  var bg=document.getElementById('col-bg').value||'#ffffff';
+  var svgStr='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'">'
+    +'<rect width="'+W+'" height="'+H+'" fill="'+bg+'"/>'
+    +svgCtx.getOps().join('\n')
+    +'</svg>';
+  var blob=new Blob([svgStr],{type:'image/svg+xml'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='laceit.svg'; a.click();
+  if(wasAnim) startAnim();
+});
+
+// animation
+function stopAnim(){ if(animRaf){cancelAnimationFrame(animRaf);animRaf=null;} animating=false; }
+function startAnim(){
+  animating=true;
+  var speed=parseInt(document.getElementById('sl-aspeed').value)||3;
+  function loop(){ animT+=speed*0.012; draw(); animRaf=requestAnimationFrame(loop); }
+  animRaf=requestAnimationFrame(loop);
+}
+document.getElementById('cb-invert').addEventListener('change',function(){
+  var previewImg=document.getElementById('preview-img');
+  if(previewImg.src && previewImg.src!==window.location.href){
+    var img=new Image(); img.src=previewImg.src;
+    img.onload=function(){ imgContourData=extractImageContour(img); if(!animating)draw(); };
+  }
+});
+document.getElementById('cb-anim').addEventListener('change',function(){
+  if(this.checked) startAnim(); else { stopAnim(); draw(); }
+});
+
+seed=Math.random()*999999|0;
+draw();
+</script>
+</body>
+</html>
