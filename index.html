@@ -105,6 +105,8 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
       <div class="row"><span>Stray ends</span><input type="range" id="sl-stray" min="0" max="10" value="5"><span class="val" id="vl-stray">5</span></div>
       <div class="row"><span>Colors</span></div>
       <div class="swatch-row" id="color-swatches"></div>
+      <div class="row" style="margin-top:8px"><span>C1</span><input type="color" id="col-c0" value="#3a7fc1"><span>C2</span><input type="color" id="col-c1" value="#d95f2b"><span>C3</span><input type="color" id="col-c2" value="#e8e4dc"></div>
+      <div class="row"><span>Opacity</span><input type="range" id="sl-palpha" min="10" max="100" value="100"><span class="val" id="vl-palpha">100</span></div>
     </div>
     <div class="ps">
       <div class="ps-t">Animate</div>
@@ -207,6 +209,7 @@ var PALETTES = [
 ];
 var activePalette = 0;
 var seed = 0;
+var alphaScale = 1;
 var animRaf = null, animT = 0, animating = false;
 
 // seeded LCG
@@ -762,7 +765,7 @@ function drawStitch(x1,y1,x2,y2,weight,col,tight,sagMult){
   if(drape>0 && sr()<drape*0.08){
     var dropLen=(y2-y1+Math.abs(x2-x1))*0.5*(1+sr()*drape*0.6);
     var breakAt=0.4+sr()*0.4; // where the line "snaps"
-    ctx.strokeStyle=col; ctx.lineWidth=weight*0.7; ctx.globalAlpha=0.5+sr()*0.3;
+    ctx.strokeStyle=col; ctx.lineWidth=weight*0.7; ctx.globalAlpha=(0.5+sr()*0.3)*alphaScale;
     ctx.beginPath();
     ctx.moveTo(x1,y1);
     // falls straight down from break point
@@ -835,7 +838,7 @@ function drawStray(x,y,ang,len,weight,col,tOffset){
   ctx.lineCap='round';
   for(var p=1;p<pts.length;p++){
     var a=0.55*(1-p/pts.length)+0.1;
-    ctx.globalAlpha=a;
+    ctx.globalAlpha=a*alphaScale;
     ctx.beginPath(); ctx.moveTo(pts[p-1][0],pts[p-1][1]); ctx.lineTo(pts[p][0],pts[p][1]); ctx.stroke();
   }
   ctx.globalAlpha=1;
@@ -869,7 +872,7 @@ function drawTriFill(pts, col, density, tw){
                          Math.hypot(p2[0]-p1[0],p2[1]-p1[1]),
                          Math.hypot(p0[0]-p2[0],p0[1]-p2[1]));
     if(maxEdge>pts.length*0.25) continue;
-    ctx.globalAlpha=0.12+sr()*0.1;
+    ctx.globalAlpha=(0.12+sr()*0.1)*alphaScale;
     ctx.beginPath(); ctx.moveTo(p0[0],p0[1]); ctx.lineTo(p1[0],p1[1]); ctx.lineTo(p2[0],p2[1]); ctx.closePath();
     ctx.stroke();
   }
@@ -881,7 +884,7 @@ function drawTriFill(pts, col, density, tw){
 function drawRunningThread(anchors, col, lw){
   if(anchors.length<2) return;
   ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.lineCap='round'; ctx.lineJoin='round';
-  ctx.globalAlpha=0.5;
+  ctx.globalAlpha=0.5*alphaScale;
 
   // build a smooth catmull-rom-style path through all waypoints first
   var allWpts=[anchors[0]];
@@ -920,7 +923,7 @@ function drawRunningThread(anchors, col, lw){
   // small thread loop at each anchor (not waypoints)
   for(var li=0;li<anchors.length;li++){
     var ax=anchors[li][0], ay=anchors[li][1];
-    ctx.globalAlpha=0.35;
+    ctx.globalAlpha=0.35*alphaScale;
     ctx.beginPath();
     // teardrop loop: a small oval rotated randomly
     var loopAngle=sr()*Math.PI*2;
@@ -961,7 +964,7 @@ function drawImageLace(cx,cy,R,layers,pal,tw,tight,loose,looseSag,looseStray,str
 
     // draw thread: skip points based on mesh (higher mesh = more detailed)
     var step=Math.max(1,Math.floor((11-mesh)*0.5));
-    ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.globalAlpha=alpha;
+    ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.globalAlpha=alpha*alphaScale;
     ctx.beginPath();
     var straight=document.getElementById('cb-straight').checked;
     var drape=parseInt(document.getElementById('sl-drape').value)||0;
@@ -974,11 +977,11 @@ function drawImageLace(cx,cy,R,layers,pal,tw,tight,loose,looseSag,looseStray,str
         var bpx=prev[0]+(curr[0]-prev[0])*0.5, bpy=prev[1]+(curr[1]-prev[1])*0.5;
         ctx.lineTo(bpx,bpy);
         ctx.stroke(); ctx.beginPath();
-        ctx.globalAlpha=alpha*0.4;
+        ctx.globalAlpha=alpha*0.4*alphaScale;
         ctx.moveTo(bpx,bpy);
         ctx.lineTo(bpx+(sr()-0.5)*sc*0.3, bpy+dropLen);
         ctx.stroke(); ctx.beginPath();
-        ctx.globalAlpha=alpha;
+        ctx.globalAlpha=alpha*alphaScale;
         ctx.moveTo(curr[0],curr[1]);
         continue;
       }
@@ -999,7 +1002,7 @@ function drawImageLace(cx,cy,R,layers,pal,tw,tight,loose,looseSag,looseStray,str
     var knotEvery=Math.max(1,Math.floor(pts.length/(mesh*2+4)));
     for(var ki=0;ki<pts.length;ki+=knotEvery){
       ctx.fillStyle=col;
-      ctx.globalAlpha=alpha*0.85;
+      ctx.globalAlpha=alpha*0.85*alphaScale;
       ctx.beginPath(); ctx.arc(pts[ki][0],pts[ki][1],lw*1.2,0,Math.PI*2); ctx.fill();
     }
     ctx.globalAlpha=1;
@@ -1033,7 +1036,7 @@ function drawImageLace(cx,cy,R,layers,pal,tw,tight,loose,looseSag,looseStray,str
       var a2=Math.pow(1-dist/synapseThresh,2)*0.4;
       var mx2=(ta.x+tb.x)/2,my2=(ta.y+tb.y)/2;
       var px2=-(tb.y-ta.y)*0.18,py2=(tb.x-ta.x)*0.18;
-      ctx.strokeStyle=ta.col; ctx.lineWidth=tw*0.3; ctx.globalAlpha=a2;
+      ctx.strokeStyle=ta.col; ctx.lineWidth=tw*0.3; ctx.globalAlpha=a2*alphaScale;
       ctx.beginPath(); ctx.moveTo(ta.x,ta.y);
       ctx.quadraticCurveTo(mx2+px2,my2+py2,tb.x,tb.y); ctx.stroke();
       ctx.globalAlpha=1;
@@ -1075,7 +1078,12 @@ function draw(){
   var weight=parseInt(document.getElementById('sl-weight').value);
   var stray=parseInt(document.getElementById('sl-stray').value);
   var bg=document.getElementById('col-bg').value;
-  var pal=PALETTES[activePalette];
+  var pal=PALETTES[activePalette].slice();
+  var c0=document.getElementById('col-c0').value;
+  var c1=document.getElementById('col-c1').value;
+  var c2=document.getElementById('col-c2').value;
+  if(c0) pal[0]=c0; if(c1) pal[1]=c1; if(c2&&pal[2]) pal[2]=c2;
+  alphaScale=(parseInt(document.getElementById('sl-palpha').value)||100)/100;
 
   var R=size*32;
   var cx=W/2, cy=H/2+10;
@@ -1083,13 +1091,16 @@ function draw(){
   var looseSag=1+loose*0.35;
   var looseStray=stray*(1+loose*0.4);
 
-  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-  ctx.lineCap='round'; ctx.lineJoin='round';
-
-  // ── Image mode: draw contour lines as lace threads ──
+  // ── Image mode ──
   if(shape==='image' && imgContourData && imgContourData.length){
-    drawImageLace(cx,cy,R,imgContourData,pal,tw,tight,loose,looseSag,looseStray,stray,mesh);
-    if(animating){ raf=requestAnimationFrame(draw); } return;
+    if(staticDirty || !animating){
+      ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      drawImageLace(cx,cy,R,imgContourData,pal,tw,tight,loose,looseSag,looseStray,stray,mesh);
+      staticDirty=false;
+    }
+    if(animating){ raf=requestAnimationFrame(draw); }
+    return;
   }
 
   var shapeData=buildShape(cx,cy,R,shape);
@@ -1097,7 +1108,6 @@ function draw(){
   var mesh2=buildMesh(cx,cy,R,shape,looseMesh,stitch,shapeData);
   var nodes=mesh2.nodes, edges=mesh2.edges, spacing=mesh2.spacing;
 
-  // apply node jitter for loose feel
   if(loose>0){
     nodes.forEach(function(n){
       n.x+=(sr()-0.5)*loose*spacing*0.18;
@@ -1105,12 +1115,45 @@ function draw(){
     });
   }
 
-  // find boundary nodes (nodes with fewer connections = edge of shape)
   var connCount=new Array(nodes.length).fill(0);
   edges.forEach(function(e){ connCount[e[0]]++; connCount[e[1]]++; });
   var maxConn=Math.max.apply(null,connCount)||1;
 
-  // draw stray thread ends — collect tips for synapse pass
+  // ── Static layer: mesh + stitches + knots (only rebuild when not animating or dirty) ──
+  if(staticDirty || !animating){
+    staticCtx.fillStyle=bg; staticCtx.fillRect(0,0,W,H);
+    staticCtx.lineCap='round'; staticCtx.lineJoin='round';
+    var prevCtx=ctx; ctx=staticCtx;
+
+    // draw stitches
+    edges.forEach(function(e){
+      var n1=nodes[e[0]], n2=nodes[e[1]];
+      var col=zoneColor(n1.zone,pal);
+      drawStitch(n1.x,n1.y,n2.x,n2.y,tw,col,tight,looseSag);
+    });
+    // draw knots
+    var knotR=tw*1.3;
+    nodes.forEach(function(n){
+      var col=zoneColor(n.zone,pal);
+      ctx.globalAlpha=(0.6+sr()*0.3)*alphaScale;
+      drawKnot(n.x,n.y,knotR,col);
+      ctx.globalAlpha=1;
+    });
+    // triangle fill
+    if(mesh>4 && shapeData){
+      shapeData.polys.forEach(function(poly){
+        drawTriFill(poly.pts,zoneColor(poly.zone,pal),mesh-4,tw);
+      });
+    }
+    ctx=prevCtx;
+    staticDirty=false;
+  }
+
+  // composite static layer onto main canvas
+  ctx.drawImage(staticLayer,0,0);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+
+  // ── Animated layer: only stray ends + synapse ──
   var strayTips=[];
   if(stray>0){
     nodes.forEach(function(n,i){
@@ -1127,7 +1170,7 @@ function draw(){
     });
   }
 
-  // ── Synapse connections: tips that nearly touch snap together ──
+  // ── Synapse connections ──
   var synapseThresh = spacing*(2.8+looseStray*0.5);
   ctx.lineCap='round';
   for(var ti=0;ti<strayTips.length;ti++){
@@ -1144,14 +1187,14 @@ function draw(){
       var perpX=-(tb.y-ta.y)*0.2, perpY=(tb.x-ta.x)*0.2;
       ctx.strokeStyle=ta.col;
       ctx.lineWidth=tw*0.4;
-      ctx.globalAlpha=alpha;
+      ctx.globalAlpha=alpha*alphaScale;
       ctx.beginPath();
       ctx.moveTo(ta.x,ta.y);
       ctx.quadraticCurveTo(mx+perpX,my+perpY,tb.x,tb.y);
       ctx.stroke();
       // tiny knot at connection point
       ctx.fillStyle=tb.col;
-      ctx.globalAlpha=alpha*0.8;
+      ctx.globalAlpha=alpha*0.8*alphaScale;
       ctx.beginPath();
       ctx.arc(mx+perpX*0.5,my+perpY*0.5,tw*0.7,0,Math.PI*2);
       ctx.fill();
@@ -1159,34 +1202,7 @@ function draw(){
   }
   ctx.globalAlpha=1;
 
-  // draw edges (stitches)
-  edges.forEach(function(e){
-    var n1=nodes[e[0]], n2=nodes[e[1]];
-    var midZone=n1.zone;
-    var col=zoneColor(midZone,pal);
-    ctx.globalAlpha=0.72+sr()*0.18;
-    drawStitch(n1.x,n1.y,n2.x,n2.y,tw,col,tight,looseSag);
-    ctx.globalAlpha=1;
-  });
-
-  // draw knots at nodes
-  var knotR=tw*1.3;
-  nodes.forEach(function(n){
-    var col=zoneColor(n.zone,pal);
-    ctx.globalAlpha=0.6+sr()*0.3;
-    drawKnot(n.x,n.y,knotR,col);
-    ctx.globalAlpha=1;
-  });
-
-  // triangle mesh fill on boundary regions
-  if(mesh>4 && shapeData){
-    shapeData.polys.forEach(function(poly){
-      var col=zoneColor(poly.zone,pal);
-      drawTriFill(poly.pts,col,mesh-4,tw);
-    });
-  }
-
-  // running thread connecting shape zones
+  // running thread (drawn on top of static layer, part of anim pass)
   if(shapeData && shapeData.polys.length>1){
     var anchors=shapeData.polys.map(function(poly){
       var pts=poly.pts;
@@ -1216,6 +1232,9 @@ function buildSwatches(){
       document.querySelectorAll('.swatch-group').forEach(function(g,gi){
         g.classList.toggle('active',gi===pi);
       });
+      document.getElementById('col-c0').value = PALETTES[pi][0];
+      document.getElementById('col-c1').value = PALETTES[pi][1];
+      document.getElementById('col-c2').value = PALETTES[pi][2]||PALETTES[pi][0];
       if(!animating)draw();
     });
     wrap.appendChild(group);
@@ -1234,10 +1253,21 @@ document.getElementById('btn-theme').addEventListener('click',function(){
 ['sl-size','sl-mesh','sl-tight','sl-loose','sl-weight','sl-stray','sl-aspeed','sl-drape'].forEach(function(id){
   var el=document.getElementById(id);
   var vl=document.getElementById('vl-'+id.replace('sl-',''));
-  el.addEventListener('input',function(){ if(vl)vl.textContent=el.value; if(!animating)draw(); });
+  el.addEventListener('input',function(){ staticDirty=true; if(vl)vl.textContent=el.value; if(!animating)draw(); });
+});
+// palette opacity slider
+(function(){
+  var el=document.getElementById('sl-palpha');
+  var vl=document.getElementById('vl-palpha');
+  el.addEventListener('input',function(){ staticDirty=true; if(vl)vl.textContent=el.value; if(!animating)draw(); });
+})();
+// custom color pickers
+['col-c0','col-c1','col-c2'].forEach(function(id){
+  document.getElementById(id).addEventListener('input',function(){ staticDirty=true; if(!animating)draw(); });
 });
 ['sel-shape','sel-stitch','col-bg'].forEach(function(id){
   document.getElementById(id).addEventListener('change',function(){
+    staticDirty=true;
     var val=document.getElementById('sel-shape').value;
     document.getElementById('text-input-row').style.display=val==='text'?'flex':'none';
     document.getElementById('image-upload-row').style.display=val==='image'?'block':'none';
@@ -1375,11 +1405,20 @@ document.getElementById('btn-svg').addEventListener('click',function(){
 });
 
 // animation
-function stopAnim(){ if(animRaf){cancelAnimationFrame(animRaf);animRaf=null;} animating=false; }
+function stopAnim(){ if(animRaf){cancelAnimationFrame(animRaf);animRaf=null;} animating=false; staticDirty=true; }
 function startAnim(){
   animating=true;
   var speed=parseInt(document.getElementById('sl-aspeed').value)||3;
-  function loop(){ animT+=speed*0.012; draw(); animRaf=requestAnimationFrame(loop); }
+  var lastT=0;
+  var interval=1000/24; // cap at 24fps
+  function loop(ts){
+    if(ts-lastT>=interval){
+      lastT=ts;
+      animT+=speed*0.012;
+      draw();
+    }
+    animRaf=requestAnimationFrame(loop);
+  }
   animRaf=requestAnimationFrame(loop);
 }
 document.getElementById('cb-invert').addEventListener('change',function(){
