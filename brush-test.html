@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>brush test</title></head>
+<body style="background:#222;padding:20px">
+<canvas id="c" width="600" height="400" style="border:1px solid #fff"></canvas>
+<br><button onclick="runTest()" style="margin-top:10px;padding:8px 20px;font-size:16px">Run Brush Test</button>
+<div id="log" style="color:#0f0;font-family:monospace;margin-top:10px"></div>
+<script src="brush.js"></script>
+<script>
+var log = document.getElementById('log');
+function out(msg){ log.innerHTML += msg + '<br>'; console.log(msg); }
+
+function runTest(){
+  log.innerHTML = '';
+  var cv = document.getElementById('c');
+  out('canvas: ' + cv.width + 'x' + cv.height);
+  try {
+    brush.load(cv);
+    out('[OK] brush.load()');
+  } catch(e) {
+    out('[FAIL] brush.load: ' + e.message);
+    return;
+  }
+  try {
+    brush.clear('#1a1a1a');
+    out('[OK] brush.clear()');
+    brush.set('HB', '#ffffff', 2);
+    out('[OK] brush.set()');
+    brush.line(50, 200, 550, 200);
+    brush.line(100, 100, 100, 300);
+    brush.line(200, 100, 500, 300);
+    out('[OK] brush.line() x3');
+    brush.render();
+    out('[OK] brush.render()');
+    out('Done! Check canvas above.');
+  } catch(e) {
+    out('[FAIL] ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
