@@ -218,9 +218,14 @@ var brushReady = false;
 function initBrush(){
   if(brushReady) return;
   try{
+    // brush.load needs a canvas with no prior context — create fresh each time if needed
     brush.load(brushCv);
     brushReady=true;
-  }catch(e){ console.warn('brush init failed',e); }
+    console.log('[brush] init OK');
+  }catch(e){
+    console.error('[brush] init failed:', e);
+    brushReady=false;
+  }
 }
 
 // Render edges via p5.brush onto brushCv, then composite onto main ctx
@@ -229,8 +234,12 @@ function drawWithBrush(nodes, edges, connCount, maxConn, pal, tw, spacing, loose
   if(!brushReady) return;
   var renderMode = document.getElementById('sel-render').value;
   if(renderMode==='lace') return;
-  var bg = document.getElementById('col-bg').value || '#ffffff';
-  brush.clear(bg);
+
+  // clear WebGL canvas via its own context
+  var gl = brushCv.getContext('webgl2');
+  if(gl){ gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); }
+  brush.clear();
+
   var col0 = pal[0], col1 = pal[1] || pal[0];
   var bw = Math.max(0.4, tw * 0.5);
 
@@ -1215,12 +1224,12 @@ function draw(){
     staticDirty=false;
   }
 
-  // composite static layer onto main canvas
+  // composite static layer onto main canvas (skip in brush mode)
+  var renderMode=document.getElementById('sel-render').value;
   ctx.drawImage(staticLayer,0,0);
   ctx.lineCap='round'; ctx.lineJoin='round';
 
   // ── Brush render mode: overlay p5.brush on top ──
-  var renderMode=document.getElementById('sel-render').value;
   if(renderMode!=='lace'){
     drawWithBrush(nodes,edges,connCount,maxConn,pal,tw,spacing,looseStray);
   }
