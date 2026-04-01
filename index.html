@@ -1011,6 +1011,67 @@ function drawRunningThread(anchors, col, lw){
   ctx.globalAlpha=1;
 }
 
+// Image mode with p5.brush rendering
+function drawImageLaceBrush(cx,cy,R,layers,pal,tw,loose,looseStray,stray,mesh,renderMode){
+  initBrush();
+  if(!brushReady) return;
+  var n=layers.length;
+  var allPts=[]; layers.forEach(function(l){allPts=allPts.concat(l.pts);});
+  var xs=allPts.map(function(p){return p[0];}), ys=allPts.map(function(p){return p[1];});
+  var minX=Math.min.apply(null,xs),maxX=Math.max.apply(null,xs);
+  var minY=Math.min.apply(null,ys),maxY=Math.max.apply(null,ys);
+  var sc=Math.min(2*R*0.9/(maxX-minX||1),2*R*0.9/(maxY-minY||1));
+  var offX=cx-(minX+maxX)/2*sc, offY=cy-(minY+maxY)/2*sc;
+  var ox=W/2, oy=H/2; // brush origin offset
+
+  var gl=brushCv.getContext('webgl2');
+  if(gl){gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);}
+  brush.clear();
+
+  var step=Math.max(1,Math.floor((11-mesh)*0.5));
+
+  layers.forEach(function(layer,li){
+    var pts=layer.pts;
+    if(pts.length<3) return;
+    var t=li/(n-1||1);
+    var col=li<n*0.35?pal[0]:(li<n*0.65?pal[1]:(pal[2]||pal[1]));
+    var lw=tw*(1.6-t*1.1)*0.5;
+
+    // convert to canvas coords (brush space = canvas - W/2, H/2)
+    var bpts=[];
+    for(var pi=0;pi<pts.length;pi+=step){
+      var jx=loose>0?(sr()-0.5)*loose*sc*0.04:0;
+      var jy=loose>0?(sr()-0.5)*loose*sc*0.04:0;
+      bpts.push([pts[pi][0]*sc+offX+jx-ox, pts[pi][1]*sc+offY+jy-oy]);
+    }
+    if(bpts.length<2) return;
+
+    // draw as spline segments
+    brush.set(renderMode, col, lw);
+    for(var bi=0;bi<bpts.length-1;bi++){
+      brush.line(bpts[bi][0],bpts[bi][1],bpts[bi+1][0],bpts[bi+1][1]);
+    }
+    // close contour
+    brush.line(bpts[bpts.length-1][0],bpts[bpts.length-1][1],bpts[0][0],bpts[0][1]);
+
+    // stray ends
+    if(stray>0){
+      var strayEvery=Math.max(4,Math.floor(bpts.length/(stray+1)));
+      brush.set(renderMode, col, lw*0.5);
+      for(var si=0;si<bpts.length;si+=strayEvery){
+        var ang=Math.random()*Math.PI*2;
+        var len=sc*(1.2+Math.random()*looseStray*0.5);
+        brush.line(bpts[si][0],bpts[si][1],
+                   bpts[si][0]+Math.cos(ang)*len,
+                   bpts[si][1]+Math.sin(ang)*len);
+      }
+    }
+  });
+
+  brush.render();
+  ctx.drawImage(brushCv,0,0);
+}
+
 function drawImageLace(cx,cy,R,layers,pal,tw,tight,loose,looseSag,looseStray,stray,mesh){
   var n=layers.length;
   var allPts=[]; layers.forEach(function(l){allPts=allPts.concat(l.pts);});
@@ -1171,9 +1232,14 @@ function draw(){
   // ── Image mode ──
   if(shape==='image' && imgContourData && imgContourData.length){
     if(staticDirty || !animating){
+      var renderMode=document.getElementById('sel-render').value;
       ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
       ctx.lineCap='round'; ctx.lineJoin='round';
-      drawImageLace(cx,cy,R,imgContourData,pal,tw,tight,loose,looseSag,looseStray,stray,mesh);
+      if(renderMode==='lace'){
+        drawImageLace(cx,cy,R,imgContourData,pal,tw,tight,loose,looseSag,looseStray,stray,mesh);
+      } else {
+        drawImageLaceBrush(cx,cy,R,imgContourData,pal,tw,loose,looseStray,stray,mesh,renderMode);
+      }
       staticDirty=false;
     }
     if(animating){ raf=requestAnimationFrame(draw); }
