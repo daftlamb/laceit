@@ -612,7 +612,7 @@ function extractImageContour(img){
   var scale=Math.min(maxDim/img.width,maxDim/img.height,1);
   var iw=Math.round(img.width*scale)||1, ih=Math.round(img.height*scale)||1;
   imgOffscreen.width=iw; imgOffscreen.height=ih;
-  var oc=imgOffscreen.getContext('2d');
+  var oc=imgOffscreen.getContext('2d',{willReadFrequently:true});
   oc.drawImage(img,0,0,iw,ih);
   var pxData=oc.getImageData(0,0,iw,ih).data;
   var simplifyEps=parseInt(document.getElementById('sl-simplify').value);
@@ -1224,12 +1224,17 @@ function draw(){
     staticDirty=false;
   }
 
-  // composite static layer onto main canvas (skip in brush mode)
+  // composite static layer onto main canvas (skip in brush mode — brush redraws everything)
   var renderMode=document.getElementById('sel-render').value;
-  ctx.drawImage(staticLayer,0,0);
+  if(renderMode==='lace'){
+    ctx.drawImage(staticLayer,0,0);
+  } else {
+    // brush mode: just fill background
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  }
   ctx.lineCap='round'; ctx.lineJoin='round';
 
-  // ── Brush render mode: overlay p5.brush on top ──
+  // ── Brush render mode ──
   if(renderMode!=='lace'){
     drawWithBrush(nodes,edges,connCount,maxConn,pal,tw,spacing,looseStray);
   }
