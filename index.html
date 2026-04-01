@@ -101,6 +101,19 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
     </div>
     <div class="ps">
       <div class="ps-t">Thread</div>
+      <div class="row"><span>Render</span>
+        <select id="sel-render">
+          <option value="lace">Lace (default)</option>
+          <option value="HB">Pencil HB</option>
+          <option value="2B">Pencil 2B</option>
+          <option value="charcoal">Charcoal</option>
+          <option value="pen">Pen</option>
+          <option value="crayon">Crayon</option>
+          <option value="pastel">Pastel</option>
+          <option value="spray">Spray</option>
+          <option value="marker">Marker</option>
+        </select>
+      </div>
       <div class="row"><span>Weight</span><input type="range" id="sl-weight" min="1" max="10" value="4"><span class="val" id="vl-weight">4</span></div>
       <div class="row"><span>Stray ends</span><input type="range" id="sl-stray" min="0" max="10" value="5"><span class="val" id="vl-stray">5</span></div>
       <div class="row"><span>Colors</span></div>
@@ -121,6 +134,7 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
   </div>
   <div id="canvas-wrap"><canvas id="c" width="1200" height="1400"></canvas></div>
 </div>
+<script src="brush.js"></script>
 <script>
 // ── Letter bitmap: 7×9 grid per char, used to build polygon outlines ──
 // Each char is a flat 63-bit array (7 cols × 9 rows), 1=filled
@@ -192,6 +206,58 @@ var imgContourData = null;
 var imgOffscreen = document.createElement('canvas');
 var ctx = cv.getContext('2d');
 var W = cv.width, H = cv.height;
+
+// ── p5.brush WebGL canvas (overlay for brush render mode) ──
+var brushCv = document.createElement('canvas');
+brushCv.width = W; brushCv.height = H;
+brushCv.style.cssText='position:absolute;top:0;left:0;pointer-events:none;display:none';
+var cwrap = document.getElementById('canvas-wrap');
+cwrap.style.position='relative';
+cwrap.appendChild(brushCv);
+var brushReady = false;
+function initBrush(){
+  if(brushReady) return;
+  try{
+    brush.load(brushCv);
+    brushReady=true;
+  }catch(e){ console.warn('brush init failed',e); }
+}
+
+// Render edges via p5.brush onto brushCv, then composite onto main ctx
+function drawWithBrush(nodes, edges, connCount, maxConn, pal, tw, spacing, looseStray){
+  initBrush();
+  if(!brushReady) return;
+  var renderMode = document.getElementById('sel-render').value;
+  if(renderMode==='lace') return;
+  var bg = document.getElementById('col-bg').value || '#ffffff';
+  brush.clear(bg);
+  var col0 = pal[0], col1 = pal[1] || pal[0];
+  var bw = Math.max(0.4, tw * 0.5);
+
+  // draw edges
+  edges.forEach(function(e){
+    var n1=nodes[e[0]], n2=nodes[e[1]];
+    var col = (n1.zone==='cap'||n1.zone==='wing_upper') ? col0 : col1;
+    brush.set(renderMode, col, bw);
+    brush.line(n1.x, n1.y, n2.x, n2.y);
+  });
+
+  // draw stray ends for boundary nodes
+  nodes.forEach(function(n,i){
+    if(connCount[i] >= maxConn*0.55) return;
+    var col = (n.zone==='cap'||n.zone==='wing_upper') ? col0 : col1;
+    brush.set(renderMode, col, bw*0.5);
+    var numS = Math.floor(Math.random()*looseStray*0.5+0.5);
+    for(var s=0;s<numS;s++){
+      var ang = Math.random()*Math.PI*2;
+      var len = spacing*(0.8+Math.random()*looseStray*0.3);
+      brush.line(n.x, n.y, n.x+Math.cos(ang)*len, n.y+Math.sin(ang)*len);
+    }
+  });
+
+  brush.render();
+  ctx.drawImage(brushCv, 0, 0);
+}
 
 // static layer cache: pre-render non-animated parts
 var staticLayer = document.createElement('canvas');
@@ -1153,6 +1219,12 @@ function draw(){
   ctx.drawImage(staticLayer,0,0);
   ctx.lineCap='round'; ctx.lineJoin='round';
 
+  // ── Brush render mode: overlay p5.brush on top ──
+  var renderMode=document.getElementById('sel-render').value;
+  if(renderMode!=='lace'){
+    drawWithBrush(nodes,edges,connCount,maxConn,pal,tw,spacing,looseStray);
+  }
+
   // ── Animated layer: only stray ends + synapse ──
   var strayTips=[];
   if(stray>0){
@@ -1265,7 +1337,7 @@ document.getElementById('btn-theme').addEventListener('click',function(){
 ['col-c0','col-c1','col-c2'].forEach(function(id){
   document.getElementById(id).addEventListener('input',function(){ staticDirty=true; if(!animating)draw(); });
 });
-['sel-shape','sel-stitch','col-bg'].forEach(function(id){
+['sel-shape','sel-stitch','col-bg','sel-render'].forEach(function(id){
   document.getElementById(id).addEventListener('change',function(){
     staticDirty=true;
     var val=document.getElementById('sel-shape').value;
