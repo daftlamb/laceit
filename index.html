@@ -1703,7 +1703,8 @@ async function startSound() {
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
     analyser  = audioCtx.createAnalyser();
-    analyser.fftSize = 256;
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.5;
     audioCtx.createMediaStreamSource(micStream).connect(analyser);
 
     // capture base values
