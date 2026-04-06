@@ -130,6 +130,7 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
       <div class="ps-t">Sound</div>
       <div class="row"><span>Listen</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-sound"> on</label></div>
       <div class="row" id="sound-status" style="font-size:11px;color:var(--muted);padding:2px 0;">mic off</div>
+      <canvas id="sound-viz" width="180" height="32" style="display:none;width:100%;height:32px;border-radius:4px;margin-top:4px;background:var(--panel-bg,#1a1a1a)"></canvas>
     </div>
     <div class="ps">
       <div class="ps-t">Canvas</div>
@@ -1622,11 +1623,27 @@ function soundLoop() {
   const rms = (low + mid + high) / 3;
 
   // map to slider ranges
-  setSlider('sl-mesh',   baseMesh   + low  * 6,  2, 10);
-  setSlider('sl-tight',  baseTight  + high * 8,  0, 10);
-  setSlider('sl-drape',  baseDrape  + mid  * 6,  0, 10);
-  setSlider('sl-loose',  baseLoose  + rms  * 4,  0, 10);
-  setSlider('sl-weight', baseWeight + rms  * 4,  1, 10);
+  setSlider('sl-mesh',   baseMesh   + low  * 6,   2, 10);
+  setSlider('sl-tight',  baseTight  + high * 14,  0, 10);  // boosted
+  setSlider('sl-drape',  baseDrape  + mid  * 6,   0, 10);
+  setSlider('sl-loose',  baseLoose  + rms  * 12,  0, 10);  // boosted
+  setSlider('sl-weight', baseWeight + rms  * 8,   1, 10);  // grows with volume
+
+  // draw spectrum visualizer
+  const viz = document.getElementById('sound-viz');
+  if (viz) {
+    const vctx = viz.getContext('2d');
+    const w = viz.width, h = viz.height;
+    vctx.clearRect(0, 0, w, h);
+    const step = Math.floor(buf.length / w);
+    for (let x = 0; x < w; x++) {
+      const v = buf[x * step] / 255;
+      const barH = v * h;
+      const hue = 180 + v * 120;
+      vctx.fillStyle = `hsla(${hue},70%,60%,0.85)`;
+      vctx.fillRect(x, h - barH, 1, barH);
+    }
+  }
 
   draw();
   soundRaf = requestAnimationFrame(soundLoop);
@@ -1648,6 +1665,7 @@ async function startSound() {
     baseWeight = +document.getElementById('sl-weight').value;
 
     document.getElementById('sound-status').textContent = '🎙 listening…';
+    document.getElementById('sound-viz').style.display = 'block';
     soundLoop();
   } catch(e) {
     document.getElementById('sound-status').textContent = 'mic error: ' + e.message;
@@ -1661,6 +1679,7 @@ function stopSound() {
   if (audioCtx)  audioCtx.close();
   analyser = audioCtx = micStream = soundRaf = null;
   document.getElementById('sound-status').textContent = 'mic off';
+  document.getElementById('sound-viz').style.display = 'none';
   draw();
 }
 
