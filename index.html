@@ -1598,6 +1598,10 @@ draw();
 // --- Sound input ---
 let audioCtx = null, analyser = null, micStream = null, soundRaf = null;
 let baseMesh, baseTight, baseDrape, baseLoose, baseWeight;
+// current lerped values
+let curMesh, curTight, curDrape, curLoose, curWeight;
+// spring state for elastic decay
+let springTight = 0, springLoose = 0, springVelT = 0, springVelL = 0;
 
 function setSlider(id, val, min, max) {
   const el = document.getElementById(id);
@@ -1623,11 +1627,33 @@ function soundLoop() {
   const rms = (low + mid + high) / 3;
 
   // map to slider ranges
-  setSlider('sl-mesh',   baseMesh   + low  * 6,   2, 10);
-  setSlider('sl-tight',  baseTight  + high * 14,  0, 10);  // boosted
-  setSlider('sl-drape',  baseDrape  + mid  * 6,   0, 10);
-  setSlider('sl-loose',  baseLoose  + rms  * 12,  0, 10);  // boosted
-  setSlider('sl-weight', baseWeight + rms  * 8,   1, 10);  // grows with volume
+  // target values from audio
+  const tgtMesh   = baseMesh   + low  * 6;
+  const tgtTight  = baseTight  + high * 18;
+  const tgtDrape  = baseDrape  + mid  * 6;
+  const tgtLoose  = baseLoose  + rms  * 18;
+  const tgtWeight = baseWeight + rms  * 8;
+
+  // lerp smooth (0.18 = snappy but not instant)
+  const lf = 0.18;
+  curMesh   = curMesh   + (tgtMesh   - curMesh)   * lf;
+  curDrape  = curDrape  + (tgtDrape  - curDrape)  * lf;
+  curWeight = curWeight + (tgtWeight - curWeight) * lf;
+
+  // spring physics for tight + loose (elastic bounce)
+  const stiffness = 0.22, damping = 0.62;
+  springVelT += (tgtTight - springTight) * stiffness;
+  springVelT *= damping;
+  springTight += springVelT;
+  springVelL += (tgtLoose - springLoose) * stiffness;
+  springVelL *= damping;
+  springLoose += springVelL;
+
+  setSlider('sl-mesh',   curMesh,    2, 10);
+  setSlider('sl-tight',  springTight, 0, 10);
+  setSlider('sl-drape',  curDrape,   0, 10);
+  setSlider('sl-loose',  springLoose, 0, 10);
+  setSlider('sl-weight', curWeight,  1, 10);
 
   // draw spectrum visualizer — smooth curve with low/mid/high color zones
   const viz = document.getElementById('sound-viz');
@@ -1713,6 +1739,11 @@ async function startSound() {
     baseDrape  = +document.getElementById('sl-drape').value;
     baseLoose  = +document.getElementById('sl-loose').value;
     baseWeight = +document.getElementById('sl-weight').value;
+    // init lerp + spring from base
+    curMesh = baseMesh; curTight = baseTight; curDrape = baseDrape;
+    curLoose = baseLoose; curWeight = baseWeight;
+    springTight = baseTight; springLoose = baseLoose;
+    springVelT = 0; springVelL = 0;
 
     document.getElementById('sound-status').textContent = '🎙 listening…';
     document.getElementById('sound-viz').style.display = 'block';
