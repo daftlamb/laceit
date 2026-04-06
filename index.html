@@ -1629,20 +1629,69 @@ function soundLoop() {
   setSlider('sl-loose',  baseLoose  + rms  * 12,  0, 10);  // boosted
   setSlider('sl-weight', baseWeight + rms  * 8,   1, 10);  // grows with volume
 
-  // draw spectrum visualizer
+  // draw spectrum visualizer — smooth curve with low/mid/high color zones
   const viz = document.getElementById('sound-viz');
   if (viz) {
     const vctx = viz.getContext('2d');
     const w = viz.width, h = viz.height;
     vctx.clearRect(0, 0, w, h);
-    const step = Math.floor(buf.length / w);
-    for (let x = 0; x < w; x++) {
-      const v = buf[x * step] / 255;
-      const barH = v * h;
-      const hue = 180 + v * 120;
-      vctx.fillStyle = `hsla(${hue},70%,60%,0.85)`;
-      vctx.fillRect(x, h - barH, 1, barH);
+
+    const bars = 48;
+    const step = Math.floor(buf.length / bars);
+    const pts = [];
+    for (let i = 0; i < bars; i++) {
+      let sum = 0;
+      for (let j = 0; j < step; j++) sum += buf[i * step + j];
+      pts.push(sum / (step * 255));
     }
+
+    // smooth with simple moving average
+    const smooth = pts.map((v, i) => {
+      const s = pts.slice(Math.max(0,i-2), i+3);
+      return s.reduce((a,b)=>a+b,0)/s.length;
+    });
+
+    // draw filled curve
+    vctx.beginPath();
+    vctx.moveTo(0, h);
+    smooth.forEach((v, i) => {
+      const x = (i / (bars - 1)) * w;
+      const y = h - v * (h * 0.92);
+      if (i === 0) vctx.lineTo(x, y);
+      else {
+        const px = ((i-1) / (bars-1)) * w;
+        const py = h - smooth[i-1] * (h * 0.92);
+        const cx = (px + x) / 2;
+        vctx.bezierCurveTo(cx, py, cx, y, x, y);
+      }
+    });
+    vctx.lineTo(w, h);
+    vctx.closePath();
+
+    // gradient: low=teal, mid=violet, high=rose
+    const grad = vctx.createLinearGradient(0, 0, w, 0);
+    grad.addColorStop(0,    'hsla(180,70%,55%,0.9)');
+    grad.addColorStop(0.4,  'hsla(270,65%,60%,0.9)');
+    grad.addColorStop(1,    'hsla(340,70%,60%,0.9)');
+    vctx.fillStyle = grad;
+    vctx.fill();
+
+    // draw vertical tick lines at band boundaries
+    vctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    vctx.lineWidth = 1;
+    [0.33, 0.66].forEach(pos => {
+      vctx.beginPath();
+      vctx.moveTo(pos * w, 0);
+      vctx.lineTo(pos * w, h);
+      vctx.stroke();
+    });
+
+    // band labels
+    vctx.fillStyle = 'rgba(255,255,255,0.35)';
+    vctx.font = '8px monospace';
+    vctx.fillText('low', 3, h - 3);
+    vctx.fillText('mid', w * 0.38, h - 3);
+    vctx.fillText('high', w * 0.7, h - 3);
   }
 
   draw();
