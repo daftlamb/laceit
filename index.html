@@ -127,6 +127,11 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
       <div class="row"><span>Speed</span><input type="range" id="sl-aspeed" min="1" max="10" value="3"><span class="val" id="vl-aspeed">3</span></div>
     </div>
     <div class="ps">
+      <div class="ps-t">Sound</div>
+      <div class="row"><span>Listen</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-sound"> on</label></div>
+      <div class="row" id="sound-status" style="font-size:11px;color:var(--muted);padding:2px 0;">mic off</div>
+    </div>
+    <div class="ps">
       <div class="ps-t">Canvas</div>
       <div class="row"><span>Background</span><input type="color" id="col-bg" value="#f5f5f5"></div>
     </div>
@@ -1588,6 +1593,80 @@ document.getElementById('cb-anim').addEventListener('change',function(){
 
 seed=Math.random()*999999|0;
 draw();
+
+// --- Sound input ---
+let audioCtx = null, analyser = null, micStream = null, soundRaf = null;
+let baseMesh, baseTight, baseDrape, baseLoose, baseWeight;
+
+function setSlider(id, val, min, max) {
+  const el = document.getElementById(id);
+  const vl = document.getElementById('vl-' + id.replace('sl-',''));
+  const clamped = Math.max(min, Math.min(max, Math.round(val)));
+  el.value = clamped;
+  if (vl) vl.textContent = clamped;
+}
+
+function soundLoop() {
+  if (!analyser) return;
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(buf);
+
+  const third = Math.floor(buf.length / 3);
+  let low = 0, mid = 0, high = 0;
+  for (let i = 0; i < third; i++) low += buf[i];
+  for (let i = third; i < third*2; i++) mid += buf[i];
+  for (let i = third*2; i < buf.length; i++) high += buf[i];
+  low  = low  / (third * 255);
+  mid  = mid  / (third * 255);
+  high = high / (third * 255);
+  const rms = (low + mid + high) / 3;
+
+  // map to slider ranges
+  setSlider('sl-mesh',   baseMesh   + low  * 6,  2, 10);
+  setSlider('sl-tight',  baseTight  + high * 8,  0, 10);
+  setSlider('sl-drape',  baseDrape  + mid  * 6,  0, 10);
+  setSlider('sl-loose',  baseLoose  + rms  * 4,  0, 10);
+  setSlider('sl-weight', baseWeight + rms  * 4,  1, 10);
+
+  draw();
+  soundRaf = requestAnimationFrame(soundLoop);
+}
+
+async function startSound() {
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+    analyser  = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    audioCtx.createMediaStreamSource(micStream).connect(analyser);
+
+    // capture base values
+    baseMesh   = +document.getElementById('sl-mesh').value;
+    baseTight  = +document.getElementById('sl-tight').value;
+    baseDrape  = +document.getElementById('sl-drape').value;
+    baseLoose  = +document.getElementById('sl-loose').value;
+    baseWeight = +document.getElementById('sl-weight').value;
+
+    document.getElementById('sound-status').textContent = '🎙 listening…';
+    soundLoop();
+  } catch(e) {
+    document.getElementById('sound-status').textContent = 'mic error: ' + e.message;
+    document.getElementById('cb-sound').checked = false;
+  }
+}
+
+function stopSound() {
+  if (soundRaf) cancelAnimationFrame(soundRaf);
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+  if (audioCtx)  audioCtx.close();
+  analyser = audioCtx = micStream = soundRaf = null;
+  document.getElementById('sound-status').textContent = 'mic off';
+  draw();
+}
+
+document.getElementById('cb-sound').addEventListener('change', function() {
+  if (this.checked) startSound(); else stopSound();
+});
 </script>
 </body>
 </html>
