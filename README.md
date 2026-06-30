@@ -2,7 +2,7 @@
 
 > Turn letters and images into lace.
 
-Lace It is an experimental generative art tool that renders text and photos as intricate lace patterns — thread paths traced along contours, woven into meshes, animated in real time. Export as PNG or SVG.
+Lace It is an experimental generative art tool that renders text and photos as intricate lace patterns — thread paths traced along contours, woven into meshes, animated in real time. Export as PNG on the web, with expanded PNG and SVG export in the Electron app.
 
 ---
 
@@ -44,8 +44,8 @@ Hit **Regenerate** to reseed with a new random layout.
 
 ## Export
 
-- **PNG** — High-res flat render
-- **SVG** — Vector export, scalable to any size, ready for plotters or print
+- **Web** — PNG export
+- **Electron** — 1x-4x PNG export and SVG export
 
 ---
 

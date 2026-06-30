@@ -16,6 +16,8 @@ header{height:var(--header-h);background:var(--header-bg);border-bottom:1px soli
 .sep{flex:1}
 .btn-icon{height:28px;border:1px solid var(--border);background:transparent;border-radius:6px;cursor:pointer;color:var(--text);font-family:inherit;font-size:12px;padding:0 10px;transition:border-color .15s,color .15s}
 .btn-icon:hover{border-color:var(--accent);color:var(--accent)}
+.electron-only{display:none}
+body.electron .electron-only{display:inline-flex}
 #layout{display:flex;flex:1;overflow:hidden}
 #panel{width:260px;flex-shrink:0;background:var(--panel-bg);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
 .ps{padding:12px 14px;border-bottom:1px solid var(--border)}
@@ -46,97 +48,101 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
   <span class="brand">Lace<span class="brand-it">It</span></span>
   <span class="sep"></span>
   <button class="btn-icon" id="btn-theme">◐</button>
-  <button class="btn-icon" id="btn-export">↓ PNG</button>
-  <button class="btn-icon" id="btn-svg">↓ SVG</button>
+  <button class="btn-icon electron-only" id="btn-lang" title="Language">中文</button>
+  <button class="btn-icon" id="btn-export"><span data-i18n="exportPng">↓ PNG</span></button>
+  <select class="electron-only" id="sel-export-scale" title="PNG export scale">
+    <option value="1">1x</option>
+    <option value="2">2x</option>
+    <option value="3">3x</option>
+    <option value="4">4x</option>
+  </select>
+  <button class="btn-icon electron-only" id="btn-svg"><span data-i18n="exportSvg">↓ SVG</span></button>
 </header>
 <div id="layout">
   <div id="panel">
     <div class="ps">
-      <div class="ps-t">Form</div>
-      <div class="row"><span>Shape</span>
+      <div class="ps-t" data-i18n="form">Form</div>
+      <div class="row"><span data-i18n="shape">Shape</span>
         <select id="sel-shape">
-          <option value="fungi">Fungi 🍄</option>
-          <option value="fern">Fern 🌿</option>
-          <option value="moth">Moth 🦋</option>
-          <option value="text">Text ✦</option>
-          <option value="image">Image 🖼</option>
+          <option value="text" data-i18n="text">Text ✦</option>
+          <option value="image" data-i18n="image">Image</option>
         </select>
       </div>
-      <div id="text-input-row" class="row" style="display:none"><span>Letters</span>
+      <div id="text-input-row" class="row" style="display:none"><span data-i18n="letters">Letters</span>
         <input type="text" id="inp-text" value="AB" maxlength="4">
       </div>
       <div id="image-upload-row" style="display:none;margin-top:6px">
         <label id="upload-label" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;border:1px dashed var(--border);border-radius:6px;cursor:pointer;font-size:11px;color:var(--muted);transition:border-color .15s">
-          <span>↑ Upload image</span>
+          <span data-i18n="uploadImage">↑ Upload image</span>
           <input type="file" id="inp-image" accept="image/*" style="display:none">
         </label>
         <div id="upload-preview" style="display:none;margin-top:6px;position:relative">
           <img id="preview-img" style="width:100%;border-radius:4px;display:block">
           <div style="font-size:10px;color:var(--muted);margin-top:4px" id="contour-status"></div>
         </div>
-        <div class="row" style="margin-top:8px"><span>Layers</span><input type="range" id="sl-layers" min="2" max="8" value="4"><span class="val" id="vl-layers">4</span></div>
-        <div class="row"><span>Simplify</span><input type="range" id="sl-simplify" min="0" max="15" value="3"><span class="val" id="vl-simplify">3</span></div>
-        <div class="row"><span>Threshold</span><input type="range" id="sl-thresh" min="0" max="255" value="128"><span class="val" id="vl-thresh">128</span></div>
-        <div class="row"><span>Contrast</span><input type="range" id="sl-contrast" min="0" max="20" value="10"><span class="val" id="vl-contrast">10</span></div>
-        <div class="row"><span>Invert</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-invert"> flip</label></div>
+        <div class="row" style="margin-top:8px"><span data-i18n="layers">Layers</span><input type="range" id="sl-layers" min="2" max="8" value="4"><span class="val" id="vl-layers">4</span></div>
+        <div class="row"><span data-i18n="simplify">Simplify</span><input type="range" id="sl-simplify" min="0" max="15" value="3"><span class="val" id="vl-simplify">3</span></div>
+        <div class="row"><span data-i18n="threshold">Threshold</span><input type="range" id="sl-thresh" min="0" max="255" value="128"><span class="val" id="vl-thresh">128</span></div>
+        <div class="row"><span data-i18n="contrast">Contrast</span><input type="range" id="sl-contrast" min="0" max="20" value="10"><span class="val" id="vl-contrast">10</span></div>
+        <div class="row"><span data-i18n="invert">Invert</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-invert"> <span data-i18n="flip">flip</span></label></div>
       </div>
-      <div class="row"><span>Size</span><input type="range" id="sl-size" min="3" max="20" value="12"><span class="val" id="vl-size">12</span></div>
+      <div class="row"><span data-i18n="size">Size</span><input type="range" id="sl-size" min="3" max="20" value="12"><span class="val" id="vl-size">12</span></div>
     </div>
     <div class="ps">
-      <div class="ps-t">Stitch</div>
-      <div class="row"><span>Mesh</span><input type="range" id="sl-mesh" min="2" max="10" value="5"><span class="val" id="vl-mesh">5</span></div>
-      <div class="row"><span>Tightness</span><input type="range" id="sl-tight" min="0" max="10" value="5"><span class="val" id="vl-tight">5</span></div>
-      <div class="row"><span>Line type</span>
-        <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="cb-straight" style="accent-color:var(--accent)"> straight</label>
+      <div class="ps-t" data-i18n="stitch">Stitch</div>
+      <div class="row"><span data-i18n="mesh">Mesh</span><input type="range" id="sl-mesh" min="2" max="10" value="5"><span class="val" id="vl-mesh">5</span></div>
+      <div class="row"><span data-i18n="tightness">Tightness</span><input type="range" id="sl-tight" min="0" max="10" value="5"><span class="val" id="vl-tight">5</span></div>
+      <div class="row"><span data-i18n="lineType">Line type</span>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="cb-straight" style="accent-color:var(--accent)"> <span data-i18n="straight">straight</span></label>
       </div>
-      <div class="row"><span>Drape</span><input type="range" id="sl-drape" min="0" max="10" value="0"><span class="val" id="vl-drape">0</span></div>
-      <div class="row"><span>Loose</span><input type="range" id="sl-loose" min="0" max="10" value="2"><span class="val" id="vl-loose">2</span></div>
-      <div class="row"><span>Pattern</span>
+      <div class="row"><span data-i18n="drape">Drape</span><input type="range" id="sl-drape" min="0" max="10" value="0"><span class="val" id="vl-drape">0</span></div>
+      <div class="row"><span data-i18n="loose">Loose</span><input type="range" id="sl-loose" min="0" max="10" value="2"><span class="val" id="vl-loose">2</span></div>
+      <div class="row"><span data-i18n="pattern">Pattern</span>
         <select id="sel-stitch">
-          <option value="hex">Hexagonal</option>
-          <option value="diamond">Diamond</option>
-          <option value="random">Random</option>
+          <option value="hex" data-i18n="hexagonal">Hexagonal</option>
+          <option value="diamond" data-i18n="diamond">Diamond</option>
+          <option value="random" data-i18n="random">Random</option>
         </select>
       </div>
     </div>
     <div class="ps">
-      <div class="ps-t">Thread</div>
-      <div class="row"><span>Render</span>
+      <div class="ps-t" data-i18n="thread">Thread</div>
+      <div class="row"><span data-i18n="render">Render</span>
         <select id="sel-render">
-          <option value="lace">Lace (default)</option>
-          <option value="HB">Pencil HB</option>
-          <option value="2B">Pencil 2B</option>
-          <option value="charcoal">Charcoal</option>
-          <option value="pen">Pen</option>
-          <option value="crayon">Crayon</option>
-          <option value="pastel">Pastel</option>
-          <option value="spray">Spray</option>
-          <option value="marker">Marker</option>
+          <option value="lace" data-i18n="laceDefault">Lace (default)</option>
+          <option value="HB" data-i18n="pencilHb">Pencil HB</option>
+          <option value="2B" data-i18n="pencil2b">Pencil 2B</option>
+          <option value="charcoal" data-i18n="charcoal">Charcoal</option>
+          <option value="pen" data-i18n="pen">Pen</option>
+          <option value="crayon" data-i18n="crayon">Crayon</option>
+          <option value="pastel" data-i18n="pastel">Pastel</option>
+          <option value="spray" data-i18n="spray">Spray</option>
+          <option value="marker" data-i18n="marker">Marker</option>
         </select>
       </div>
-      <div class="row"><span>Weight</span><input type="range" id="sl-weight" min="1" max="10" value="4"><span class="val" id="vl-weight">4</span></div>
-      <div class="row"><span>Stray ends</span><input type="range" id="sl-stray" min="0" max="10" value="5"><span class="val" id="vl-stray">5</span></div>
-      <div class="row"><span>Colors</span></div>
+      <div class="row"><span data-i18n="weight">Weight</span><input type="range" id="sl-weight" min="1" max="10" value="4"><span class="val" id="vl-weight">4</span></div>
+      <div class="row"><span data-i18n="strayEnds">Stray ends</span><input type="range" id="sl-stray" min="0" max="10" value="5"><span class="val" id="vl-stray">5</span></div>
+      <div class="row"><span data-i18n="colors">Colors</span></div>
       <div class="swatch-row" id="color-swatches"></div>
       <div class="row" style="margin-top:8px"><span>C1</span><input type="color" id="col-c0" value="#3a7fc1"><span>C2</span><input type="color" id="col-c1" value="#d95f2b"><span>C3</span><input type="color" id="col-c2" value="#e8e4dc"></div>
-      <div class="row"><span>Opacity</span><input type="range" id="sl-palpha" min="10" max="100" value="100"><span class="val" id="vl-palpha">100</span></div>
+      <div class="row"><span data-i18n="opacity">Opacity</span><input type="range" id="sl-palpha" min="10" max="100" value="100"><span class="val" id="vl-palpha">100</span></div>
     </div>
     <div class="ps">
-      <div class="ps-t">Animate</div>
-      <div class="row"><span>Live</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-anim"> on</label></div>
-      <div class="row"><span>Speed</span><input type="range" id="sl-aspeed" min="1" max="10" value="3"><span class="val" id="vl-aspeed">3</span></div>
+      <div class="ps-t" data-i18n="animate">Animate</div>
+      <div class="row"><span data-i18n="live">Live</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-anim"> <span data-i18n="on">on</span></label></div>
+      <div class="row"><span data-i18n="speed">Speed</span><input type="range" id="sl-aspeed" min="1" max="10" value="3"><span class="val" id="vl-aspeed">3</span></div>
     </div>
     <div class="ps">
-      <div class="ps-t">Sound</div>
-      <div class="row"><span>Listen</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-sound"> on</label></div>
-      <div class="row" id="sound-status" style="font-size:11px;color:var(--muted);padding:2px 0;">mic off</div>
+      <div class="ps-t" data-i18n="sound">Sound</div>
+      <div class="row"><span data-i18n="listen">Listen</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-sound"> <span data-i18n="on">on</span></label></div>
+      <div class="row" id="sound-status" style="font-size:11px;color:var(--muted);padding:2px 0;" data-i18n="micOff">mic off</div>
       <canvas id="sound-viz" width="180" height="32" style="display:none;width:100%;height:32px;border-radius:4px;margin-top:4px;background:var(--panel-bg,#1a1a1a)"></canvas>
     </div>
     <div class="ps">
-      <div class="ps-t">Canvas</div>
-      <div class="row"><span>Background</span><input type="color" id="col-bg" value="#f5f5f5"></div>
+      <div class="ps-t" data-i18n="canvas">Canvas</div>
+      <div class="row"><span data-i18n="background">Background</span><input type="color" id="col-bg" value="#f5f5f5"></div>
     </div>
-    <button class="btn-icon" id="btn-regen">↺ Regenerate</button>
+    <button class="btn-icon" id="btn-regen"><span data-i18n="regenerate">↺ Regenerate</span></button>
   </div>
   <div id="canvas-wrap"><canvas id="c" width="1200" height="1400"></canvas></div>
 </div>
@@ -212,6 +218,60 @@ var imgContourData = null;
 var imgOffscreen = document.createElement('canvas');
 var ctx = cv.getContext('2d');
 var W = cv.width, H = cv.height;
+if(window.laceitElectron) document.body.classList.add('electron');
+
+var I18N = {
+  en: {
+    exportPng:'↓ PNG', exportSvg:'↓ SVG', form:'Form', shape:'Shape', text:'Text ✦', image:'Image',
+    letters:'Letters', uploadImage:'↑ Upload image', changeImage:'↺ Change image', layers:'Layers',
+    simplify:'Simplify', threshold:'Threshold', contrast:'Contrast', invert:'Invert', flip:'flip',
+    size:'Size', stitch:'Stitch', mesh:'Mesh', tightness:'Tightness', lineType:'Line type',
+    straight:'straight', drape:'Drape', loose:'Loose', pattern:'Pattern', hexagonal:'Hexagonal',
+    diamond:'Diamond', random:'Random', thread:'Thread', render:'Render', laceDefault:'Lace (default)',
+    pencilHb:'Pencil HB', pencil2b:'Pencil 2B', charcoal:'Charcoal', pen:'Pen', crayon:'Crayon',
+    pastel:'Pastel', spray:'Spray', marker:'Marker', weight:'Weight', strayEnds:'Stray ends',
+    colors:'Colors', opacity:'Opacity', animate:'Animate', live:'Live', on:'on', speed:'Speed',
+    sound:'Sound', listen:'Listen', micOff:'mic off', listening:'listening...', micError:'mic error: ',
+    canvas:'Canvas', background:'Background', regenerate:'↺ Regenerate',
+    contoursExtracted:function(count){ return count+' contours extracted'; }
+  },
+  zh: {
+    exportPng:'↓ PNG', exportSvg:'↓ SVG', form:'形式', shape:'形状', text:'文字 ✦', image:'图片',
+    letters:'字母', uploadImage:'↑ 上传图片', changeImage:'↺ 更换图片', layers:'层数',
+    simplify:'简化', threshold:'阈值', contrast:'对比度', invert:'反转', flip:'翻转',
+    size:'尺寸', stitch:'针法', mesh:'网格', tightness:'紧密度', lineType:'线条类型',
+    straight:'直线', drape:'垂坠', loose:'松散', pattern:'图案', hexagonal:'六边形',
+    diamond:'菱形', random:'随机', thread:'线', render:'渲染', laceDefault:'蕾丝（默认）',
+    pencilHb:'铅笔 HB', pencil2b:'铅笔 2B', charcoal:'炭笔', pen:'钢笔', crayon:'蜡笔',
+    pastel:'粉彩', spray:'喷雾', marker:'马克笔', weight:'粗细', strayEnds:'散线',
+    colors:'颜色', opacity:'不透明度', animate:'动画', live:'实时', on:'开启', speed:'速度',
+    sound:'声音', listen:'监听', micOff:'麦克风关闭', listening:'监听中...', micError:'麦克风错误：',
+    canvas:'画布', background:'背景', regenerate:'↺ 重新生成',
+    contoursExtracted:function(count){ return '已提取 '+count+' 条轮廓'; }
+  }
+};
+var currentLang = window.laceitElectron
+  ? (localStorage.getItem('laceit-lang') || (navigator.language.indexOf('zh')===0 ? 'zh' : 'en'))
+  : 'en';
+function tr(key){
+  var langPack=I18N[currentLang]||I18N.en;
+  return langPack[key] || I18N.en[key] || key;
+}
+function applyLanguage(){
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var value=tr(el.dataset.i18n);
+    if(typeof value==='string') el.textContent=value;
+  });
+  var langButton=document.getElementById('btn-lang');
+  if(langButton) langButton.textContent=currentLang==='zh'?'EN':'中文';
+}
+function setContourStatus(count){
+  document.getElementById('contour-status').textContent=tr('contoursExtracted')(count);
+}
+function setSoundStatus(key, suffix){
+  document.getElementById('sound-status').textContent=tr(key)+(suffix||'');
+}
+applyLanguage();
 
 // ── p5.brush WebGL canvas (overlay for brush render mode) ──
 var brushCv = document.createElement('canvas');
@@ -714,7 +774,7 @@ function extractImageContour(img){
     });
   }
 
-  document.getElementById('contour-status').textContent=layers.length+' contours extracted';
+  setContourStatus(layers.length);
   return layers.length>0?layers:null;
 }
 
@@ -1403,6 +1463,14 @@ function buildSwatches(){
 
 buildSwatches();
 
+document.getElementById('btn-lang').addEventListener('click',function(){
+  currentLang=currentLang==='zh'?'en':'zh';
+  localStorage.setItem('laceit-lang',currentLang);
+  applyLanguage();
+  if(imgContourData) setContourStatus(imgContourData.length);
+  setSoundStatus(document.getElementById('cb-sound').checked ? 'listening' : 'micOff');
+});
+
 // theme toggle
 document.getElementById('btn-theme').addEventListener('click',function(){
   var html=document.documentElement;
@@ -1425,12 +1493,17 @@ document.getElementById('btn-theme').addEventListener('click',function(){
 ['col-c0','col-c1','col-c2'].forEach(function(id){
   document.getElementById(id).addEventListener('input',function(){ staticDirty=true; if(!animating)draw(); });
 });
+function updateShapeControls(){
+  var val=document.getElementById('sel-shape').value;
+  document.getElementById('text-input-row').style.display=val==='text'?'flex':'none';
+  document.getElementById('image-upload-row').style.display=val==='image'?'block':'none';
+}
+updateShapeControls();
+
 ['sel-shape','sel-stitch','col-bg','sel-render'].forEach(function(id){
   document.getElementById(id).addEventListener('change',function(){
     staticDirty=true;
-    var val=document.getElementById('sel-shape').value;
-    document.getElementById('text-input-row').style.display=val==='text'?'flex':'none';
-    document.getElementById('image-upload-row').style.display=val==='image'?'block':'none';
+    updateShapeControls();
     if(!animating)draw();
   });
 });
@@ -1445,7 +1518,9 @@ document.getElementById('inp-image').addEventListener('change',function(e){
     img.onload=function(){
       document.getElementById('preview-img').src=ev.target.result;
       document.getElementById('upload-preview').style.display='block';
-      document.getElementById('upload-label').querySelector('span').textContent='↺ Change image';
+      var uploadText=document.getElementById('upload-label').querySelector('span');
+      uploadText.dataset.i18n='changeImage';
+      uploadText.textContent=tr('changeImage');
       // auto-switch shape selector to image
       document.getElementById('sel-shape').value='image';
       imgContourData=extractImageContour(img);
@@ -1472,14 +1547,44 @@ document.getElementById('inp-image').addEventListener('change',function(e){
 document.getElementById('btn-regen').addEventListener('click',function(){
   seed=Math.random()*999999|0; if(!animating)draw();
 });
-document.getElementById('btn-export').addEventListener('click',function(){
+function saveDownload(filename, mimeType, data){
+  if(window.laceitAPI){
+    if(typeof data === 'string' && data.indexOf('data:') === 0) return window.laceitAPI.saveDataUrl(filename, data);
+    return window.laceitAPI.saveText(filename, mimeType, data);
+  }
+  var a=document.createElement('a');
+  if(typeof data === 'string' && data.indexOf('data:') === 0){
+    a.href=data;
+  }else{
+    a.href=URL.createObjectURL(new Blob([data],{type:mimeType}));
+  }
+  a.download=filename;
+  a.click();
+}
+
+function exportPNG(scale){
   var wasAnim=animating; stopAnim();
   draw();
   setTimeout(function(){
-    var a=document.createElement('a'); a.href=cv.toDataURL('image/png');
-    a.download='laceit.png'; a.click();
+    scale=Math.max(1, Number(scale)||1);
+    if(scale===1){
+      saveDownload('laceit.png','image/png',cv.toDataURL('image/png'));
+    }else{
+      var out=document.createElement('canvas');
+      out.width=cv.width*scale;
+      out.height=cv.height*scale;
+      var outCtx=out.getContext('2d');
+      outCtx.imageSmoothingEnabled=true;
+      outCtx.drawImage(cv,0,0,out.width,out.height);
+      saveDownload('laceit-'+scale+'x.png','image/png',out.toDataURL('image/png'));
+    }
     if(wasAnim) startAnim();
   },80);
+}
+
+document.getElementById('btn-export').addEventListener('click',function(){
+  var scaleEl=document.getElementById('sel-export-scale');
+  exportPNG(scaleEl ? scaleEl.value : 1);
 });
 
 // ── SVG export ──
@@ -1558,9 +1663,7 @@ document.getElementById('btn-svg').addEventListener('click',function(){
     +'<rect width="'+W+'" height="'+H+'" fill="'+bg+'"/>'
     +svgCtx.getOps().join('\n')
     +'</svg>';
-  var blob=new Blob([svgStr],{type:'image/svg+xml'});
-  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='laceit.svg'; a.click();
+  saveDownload('laceit.svg','image/svg+xml',svgStr);
   if(wasAnim) startAnim();
 });
 
@@ -1745,11 +1848,11 @@ async function startSound() {
     springTight = baseTight; springLoose = baseLoose;
     springVelT = 0; springVelL = 0;
 
-    document.getElementById('sound-status').textContent = '🎙 listening…';
+    setSoundStatus('listening');
     document.getElementById('sound-viz').style.display = 'block';
     soundLoop();
   } catch(e) {
-    document.getElementById('sound-status').textContent = 'mic error: ' + e.message;
+    setSoundStatus('micError', e.message);
     document.getElementById('cb-sound').checked = false;
   }
 }
@@ -1759,7 +1862,7 @@ function stopSound() {
   if (micStream) micStream.getTracks().forEach(t => t.stop());
   if (audioCtx)  audioCtx.close();
   analyser = audioCtx = micStream = soundRaf = null;
-  document.getElementById('sound-status').textContent = 'mic off';
+  setSoundStatus('micOff');
   document.getElementById('sound-viz').style.display = 'none';
   draw();
 }
