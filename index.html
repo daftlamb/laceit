@@ -47,7 +47,6 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
   <span class="sep"></span>
   <button class="btn-icon" id="btn-theme">◐</button>
   <button class="btn-icon" id="btn-export">↓ PNG</button>
-  <button class="btn-icon" id="btn-svg">↓ SVG</button>
 </header>
 <div id="layout">
   <div id="panel">
@@ -55,11 +54,8 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
       <div class="ps-t">Form</div>
       <div class="row"><span>Shape</span>
         <select id="sel-shape">
-          <option value="fungi">Fungi 🍄</option>
-          <option value="fern">Fern 🌿</option>
-          <option value="moth">Moth 🦋</option>
           <option value="text">Text ✦</option>
-          <option value="image">Image 🖼</option>
+          <option value="image">Image</option>
         </select>
       </div>
       <div id="text-input-row" class="row" style="display:none"><span>Letters</span>
@@ -1425,12 +1421,17 @@ document.getElementById('btn-theme').addEventListener('click',function(){
 ['col-c0','col-c1','col-c2'].forEach(function(id){
   document.getElementById(id).addEventListener('input',function(){ staticDirty=true; if(!animating)draw(); });
 });
+function updateShapeControls(){
+  var val=document.getElementById('sel-shape').value;
+  document.getElementById('text-input-row').style.display=val==='text'?'flex':'none';
+  document.getElementById('image-upload-row').style.display=val==='image'?'block':'none';
+}
+updateShapeControls();
+
 ['sel-shape','sel-stitch','col-bg','sel-render'].forEach(function(id){
   document.getElementById(id).addEventListener('change',function(){
     staticDirty=true;
-    var val=document.getElementById('sel-shape').value;
-    document.getElementById('text-input-row').style.display=val==='text'?'flex':'none';
-    document.getElementById('image-upload-row').style.display=val==='image'?'block':'none';
+    updateShapeControls();
     if(!animating)draw();
   });
 });
@@ -1480,88 +1481,6 @@ document.getElementById('btn-export').addEventListener('click',function(){
     a.download='laceit.png'; a.click();
     if(wasAnim) startAnim();
   },80);
-});
-
-// ── SVG export ──
-function makeSVGCtx(W,H){
-  var ops=[];
-  var _strokeStyle='#000',_fillStyle='#000',_lineWidth=1,_globalAlpha=1,_lineCap='butt',_lineJoin='miter';
-  var _path=[];
-  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
-  function strokeAttr(){
-    var a=_globalAlpha<1?' stroke-opacity="'+_globalAlpha.toFixed(3)+'"':'';
-    return 'stroke="'+esc(_strokeStyle)+'"'+a+' stroke-width="'+_lineWidth.toFixed(2)+'" stroke-linecap="'+_lineCap+'" fill="none"';
-  }
-  function fillAttr(){
-    var a=_globalAlpha<1?' fill-opacity="'+_globalAlpha.toFixed(3)+'"':'';
-    return 'fill="'+esc(_fillStyle)+'"'+a+' stroke="none"';
-  }
-  var proxy={
-    get strokeStyle(){return _strokeStyle;}, set strokeStyle(v){_strokeStyle=v;},
-    get fillStyle(){return _fillStyle;}, set fillStyle(v){_fillStyle=v;},
-    get lineWidth(){return _lineWidth;}, set lineWidth(v){_lineWidth=v;},
-    get globalAlpha(){return _globalAlpha;}, set globalAlpha(v){_globalAlpha=v;},
-    get lineCap(){return _lineCap;}, set lineCap(v){_lineCap=v;},
-    get lineJoin(){return _lineJoin;}, set lineJoin(v){_lineJoin=v;},
-    save:function(){}, restore:function(){},
-    beginPath:function(){_path=[];},
-    moveTo:function(x,y){_path.push('M'+x.toFixed(1)+','+y.toFixed(1));},
-    lineTo:function(x,y){_path.push('L'+x.toFixed(1)+','+y.toFixed(1));},
-    quadraticCurveTo:function(cx,cy,x,y){_path.push('Q'+cx.toFixed(1)+','+cy.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1));},
-    bezierCurveTo:function(c1x,c1y,c2x,c2y,x,y){_path.push('C'+c1x.toFixed(1)+','+c1y.toFixed(1)+' '+c2x.toFixed(1)+','+c2y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1));},
-    arc:function(x,y,r,s,e){
-      // emit as SVG circle arc using A command
-      if(Math.abs(e-s)>=Math.PI*1.99){
-        // full circle
-        ops.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r.toFixed(1)+'" '+strokeAttr()+'/>');
-        return;
-      }
-      var x1=(x+Math.cos(s)*r).toFixed(1), y1=(y+Math.sin(s)*r).toFixed(1);
-      var x2=(x+Math.cos(e)*r).toFixed(1), y2=(y+Math.sin(e)*r).toFixed(1);
-      var large=Math.abs(e-s)>Math.PI?1:0;
-      _path.push('M'+x1+','+y1+' A'+r.toFixed(1)+','+r.toFixed(1)+' 0 '+large+',1 '+x2+','+y2);
-    },
-    ellipse:function(x,y,rx,ry,rot){
-      ops.push('<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="'+rx.toFixed(1)+'" ry="'+ry.toFixed(1)+'" transform="rotate('+(rot*180/Math.PI).toFixed(1)+','+x.toFixed(1)+','+y.toFixed(1)+')" '+strokeAttr()+'/>');
-    },
-    closePath:function(){_path.push('Z');},
-    stroke:function(){
-      if(!_path.length) return;
-      ops.push('<path d="'+_path.join(' ')+'" '+strokeAttr()+'/>');
-      _path=[];
-    },
-    fill:function(){
-      if(!_path.length) return;
-      ops.push('<path d="'+_path.join(' ')+'" '+fillAttr()+'/>');
-      _path=[];
-    },
-    fillRect:function(x,y,w,h){
-      ops.push('<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" '+fillAttr()+'/>');
-    },
-    clearRect:function(){},
-    getOps:function(){return ops;}
-  };
-  return proxy;
-}
-
-document.getElementById('btn-svg').addEventListener('click',function(){
-  var wasAnim=animating; stopAnim();
-  // swap ctx to SVG proxy, redraw, restore
-  var realCtx=ctx;
-  var W=cv.width, H=cv.height;
-  var svgCtx=makeSVGCtx(W,H);
-  ctx=svgCtx;
-  draw();
-  ctx=realCtx;
-  var bg=document.getElementById('col-bg').value||'#ffffff';
-  var svgStr='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'">'
-    +'<rect width="'+W+'" height="'+H+'" fill="'+bg+'"/>'
-    +svgCtx.getOps().join('\n')
-    +'</svg>';
-  var blob=new Blob([svgStr],{type:'image/svg+xml'});
-  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='laceit.svg'; a.click();
-  if(wasAnim) startAnim();
 });
 
 // animation
