@@ -84,6 +84,7 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
         <div class="row"><span data-i18n="simplify">Simplify</span><input type="range" id="sl-simplify" min="0" max="15" value="3"><span class="val" id="vl-simplify">3</span></div>
         <div class="row"><span data-i18n="threshold">Threshold</span><input type="range" id="sl-thresh" min="0" max="255" value="128"><span class="val" id="vl-thresh">128</span></div>
         <div class="row"><span data-i18n="contrast">Contrast</span><input type="range" id="sl-contrast" min="0" max="20" value="10"><span class="val" id="vl-contrast">10</span></div>
+        <div class="row"><span data-i18n="detail">Detail</span><input type="range" id="sl-detail" min="0" max="10" value="4"><span class="val" id="vl-detail">4</span></div>
         <div class="row"><span data-i18n="invert">Invert</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-invert"> <span data-i18n="flip">flip</span></label></div>
       </div>
       <div class="row"><span data-i18n="size">Size</span><input type="range" id="sl-size" min="3" max="20" value="12"><span class="val" id="vl-size">12</span></div>
@@ -126,17 +127,6 @@ canvas{display:block;max-width:100%;max-height:100%;border-radius:4px}
       <div class="swatch-row" id="color-swatches"></div>
       <div class="row" style="margin-top:8px"><span>C1</span><input type="color" id="col-c0" value="#3a7fc1"><span>C2</span><input type="color" id="col-c1" value="#d95f2b"><span>C3</span><input type="color" id="col-c2" value="#e8e4dc"></div>
       <div class="row"><span data-i18n="opacity">Opacity</span><input type="range" id="sl-palpha" min="10" max="100" value="100"><span class="val" id="vl-palpha">100</span></div>
-    </div>
-    <div class="ps">
-      <div class="ps-t" data-i18n="animate">Animate</div>
-      <div class="row"><span data-i18n="live">Live</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-anim"> <span data-i18n="on">on</span></label></div>
-      <div class="row"><span data-i18n="speed">Speed</span><input type="range" id="sl-aspeed" min="1" max="10" value="3"><span class="val" id="vl-aspeed">3</span></div>
-    </div>
-    <div class="ps">
-      <div class="ps-t" data-i18n="sound">Sound</div>
-      <div class="row"><span data-i18n="listen">Listen</span><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="cb-sound"> <span data-i18n="on">on</span></label></div>
-      <div class="row" id="sound-status" style="font-size:11px;color:var(--muted);padding:2px 0;" data-i18n="micOff">mic off</div>
-      <canvas id="sound-viz" width="180" height="32" style="display:none;width:100%;height:32px;border-radius:4px;margin-top:4px;background:var(--panel-bg,#1a1a1a)"></canvas>
     </div>
     <div class="ps">
       <div class="ps-t" data-i18n="canvas">Canvas</div>
@@ -224,28 +214,26 @@ var I18N = {
   en: {
     exportPng:'↓ PNG', exportSvg:'↓ SVG', form:'Form', shape:'Shape', text:'Text ✦', image:'Image',
     letters:'Letters', uploadImage:'↑ Upload image', changeImage:'↺ Change image', layers:'Layers',
-    simplify:'Simplify', threshold:'Threshold', contrast:'Contrast', invert:'Invert', flip:'flip',
+    simplify:'Simplify', threshold:'Threshold', contrast:'Contrast', detail:'Detail', invert:'Invert', flip:'flip',
     size:'Size', stitch:'Stitch', mesh:'Mesh', tightness:'Tightness', lineType:'Line type',
     straight:'straight', drape:'Drape', loose:'Loose', pattern:'Pattern', hexagonal:'Hexagonal',
     diamond:'Diamond', random:'Random', thread:'Thread', render:'Render', laceDefault:'Lace (default)',
     pencilHb:'Pencil HB', pencil2b:'Pencil 2B', charcoal:'Charcoal', pen:'Pen', crayon:'Crayon',
     pastel:'Pastel', spray:'Spray', marker:'Marker', weight:'Weight', strayEnds:'Stray ends',
-    colors:'Colors', opacity:'Opacity', animate:'Animate', live:'Live', on:'on', speed:'Speed',
-    sound:'Sound', listen:'Listen', micOff:'mic off', listening:'listening...', micError:'mic error: ',
+    colors:'Colors', opacity:'Opacity',
     canvas:'Canvas', background:'Background', regenerate:'↺ Regenerate',
     contoursExtracted:function(count){ return count+' contours extracted'; }
   },
   zh: {
     exportPng:'↓ PNG', exportSvg:'↓ SVG', form:'形式', shape:'形状', text:'文字 ✦', image:'图片',
     letters:'字母', uploadImage:'↑ 上传图片', changeImage:'↺ 更换图片', layers:'层数',
-    simplify:'简化', threshold:'阈值', contrast:'对比度', invert:'反转', flip:'翻转',
+    simplify:'简化', threshold:'阈值', contrast:'对比度', detail:'细节', invert:'反转', flip:'翻转',
     size:'尺寸', stitch:'针法', mesh:'网格', tightness:'紧密度', lineType:'线条类型',
     straight:'直线', drape:'垂坠', loose:'松散', pattern:'图案', hexagonal:'六边形',
     diamond:'菱形', random:'随机', thread:'线', render:'渲染', laceDefault:'蕾丝（默认）',
     pencilHb:'铅笔 HB', pencil2b:'铅笔 2B', charcoal:'炭笔', pen:'钢笔', crayon:'蜡笔',
     pastel:'粉彩', spray:'喷雾', marker:'马克笔', weight:'粗细', strayEnds:'散线',
-    colors:'颜色', opacity:'不透明度', animate:'动画', live:'实时', on:'开启', speed:'速度',
-    sound:'声音', listen:'监听', micOff:'麦克风关闭', listening:'监听中...', micError:'麦克风错误：',
+    colors:'颜色', opacity:'不透明度',
     canvas:'画布', background:'背景', regenerate:'↺ 重新生成',
     contoursExtracted:function(count){ return '已提取 '+count+' 条轮廓'; }
   }
@@ -267,9 +255,6 @@ function applyLanguage(){
 }
 function setContourStatus(count){
   document.getElementById('contour-status').textContent=tr('contoursExtracted')(count);
-}
-function setSoundStatus(key, suffix){
-  document.getElementById('sound-status').textContent=tr(key)+(suffix||'');
 }
 applyLanguage();
 
@@ -295,7 +280,7 @@ function initBrush(){
 }
 
 // Render edges via p5.brush onto brushCv, then composite onto main ctx
-function drawWithBrush(nodes, edges, connCount, maxConn, pal, tw, spacing, looseStray){
+function drawWithBrush(nodes, edges, connCount, maxConn, pal, tw, spacing, looseStray, bg){
   initBrush();
   if(!brushReady) return;
   var renderMode = document.getElementById('sel-render').value;
@@ -304,7 +289,7 @@ function drawWithBrush(nodes, edges, connCount, maxConn, pal, tw, spacing, loose
   // clear WebGL canvas via its own context
   var gl = brushCv.getContext('webgl2');
   if(gl){ gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); }
-  brush.clear();
+  brush.clear(bg);
 
   var col0 = pal[0], col1 = pal[1] || pal[0];
   var bw = Math.max(0.4, tw * 0.5);
@@ -336,7 +321,7 @@ function drawWithBrush(nodes, edges, connCount, maxConn, pal, tw, spacing, loose
   ctx.drawImage(brushCv, 0, 0);
 }
 
-// static layer cache: pre-render non-animated parts
+// static layer cache: pre-render stable mesh parts
 var staticLayer = document.createElement('canvas');
 staticLayer.width = W; staticLayer.height = H;
 var staticCtx = staticLayer.getContext('2d');
@@ -353,7 +338,6 @@ var PALETTES = [
 var activePalette = 0;
 var seed = 0;
 var alphaScale = 1;
-var animRaf = null, animT = 0, animating = false;
 
 // seeded LCG
 var rng = 0;
@@ -569,6 +553,21 @@ function sobelEdge(data,w,h){
   return out;
 }
 
+function sobelGray(gray,w,h){
+  var out=new Float32Array(w*h);
+  function gv(x,y){ return gray[y*w+x]||0; }
+  for(var y=1;y<h-1;y++){
+    for(var x=1;x<w-1;x++){
+      var gx=(-gv(x-1,y-1)-2*gv(x-1,y)-gv(x-1,y+1)
+              +gv(x+1,y-1)+2*gv(x+1,y)+gv(x+1,y+1));
+      var gy=(-gv(x-1,y-1)-2*gv(x,y-1)-gv(x+1,y-1)
+              +gv(x-1,y+1)+2*gv(x,y+1)+gv(x+1,y+1));
+      out[y*w+x]=Math.sqrt(gx*gx+gy*gy);
+    }
+  }
+  return out;
+}
+
 // Simple contour tracing: find largest connected edge region, walk boundary
 function traceContour(edgeMap,w,h,thresh){
   // find start: leftmost strong edge pixel in middle band
@@ -673,6 +672,139 @@ function mooreTrace(mask,iw,ih,simplifyEps){
   return mooreTraceSingle(mask,visited,iw,ih,sx,sy,simplifyEps);
 }
 
+function estimateBackgroundProfile(pxData,gray,iw,ih){
+  var samples=[];
+  var step=Math.max(1,Math.floor(Math.min(iw,ih)/48));
+  function add(x,y){
+    var idx=y*iw+x, p=idx*4;
+    samples.push({
+      gray:gray[idx],
+      r:pxData[p],
+      g:pxData[p+1],
+      b:pxData[p+2],
+      a:pxData[p+3]
+    });
+  }
+  for(var x=0;x<iw;x+=step){ add(x,0); add(x,ih-1); }
+  for(var y=0;y<ih;y+=step){ add(0,y); add(iw-1,y); }
+  var count=samples.length||1, sum=0, sr2=0, sg=0, sb=0;
+  samples.forEach(function(s){ sum+=s.gray; sr2+=s.r; sg+=s.g; sb+=s.b; });
+  var mean=sum/count, variance=0;
+  samples.forEach(function(s){ variance+=Math.pow(s.gray-mean,2); });
+  return {
+    gray:mean,
+    std:Math.sqrt(variance/count),
+    r:sr2/count,
+    g:sg/count,
+    b:sb/count
+  };
+}
+
+function buildSubjectMask(pxData,gray,iw,ih,bg){
+  var bgRegion=new Uint8Array(iw*ih);
+  var queue=[];
+  var grayTol=Math.max(18,bg.std*1.8);
+  var colorTol=58;
+  function similarToBackground(idx){
+    var p=idx*4;
+    if(pxData[p+3]<64) return true;
+    var gd=Math.abs(gray[idx]-bg.gray);
+    var cd=Math.hypot(pxData[p]-bg.r,pxData[p+1]-bg.g,pxData[p+2]-bg.b);
+    return gd<=grayTol && cd<=colorTol;
+  }
+  function enqueue(idx){
+    if(bgRegion[idx]||!similarToBackground(idx)) return;
+    bgRegion[idx]=1;
+    queue.push(idx);
+  }
+  for(var x=0;x<iw;x++){ enqueue(x); enqueue((ih-1)*iw+x); }
+  for(var y=0;y<ih;y++){ enqueue(y*iw); enqueue(y*iw+iw-1); }
+  for(var qi=0;qi<queue.length;qi++){
+    var idx=queue[qi], cx2=idx%iw, cy2=Math.floor(idx/iw);
+    if(cx2>0) enqueue(idx-1);
+    if(cx2<iw-1) enqueue(idx+1);
+    if(cy2>0) enqueue(idx-iw);
+    if(cy2<ih-1) enqueue(idx+iw);
+  }
+  var subjectMask=new Uint8Array(iw*ih);
+  for(var pi2=0;pi2<iw*ih;pi2++){
+    subjectMask[pi2]=bgRegion[pi2]?0:1;
+  }
+  return subjectMask;
+}
+
+function filterContourCandidates(contours,iw,ih,minArea){
+  return contours.filter(function(contour){
+    var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    contour.forEach(function(p){
+      if(p[0]<minX) minX=p[0]; if(p[0]>maxX) maxX=p[0];
+      if(p[1]<minY) minY=p[1]; if(p[1]>maxY) maxY=p[1];
+    });
+    var bw=maxX-minX, bh=maxY-minY;
+    var area=bw*bh;
+    var touchesBorder=minX<=1||minY<=1||maxX>=iw-2||maxY>=ih-2;
+    var rectangularity=area/(iw*ih);
+    var complexity=contour.length/(2*(bw+bh)||1);
+    if(area<minArea) return false;
+    if(touchesBorder && rectangularity>0.08) return false;
+    if(rectangularity>0.82) return false;
+    if(touchesBorder && complexity<0.18) return false;
+    return true;
+  });
+}
+
+function rgbToHex(r,g,b){
+  function h(v){ return Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0'); }
+  return '#'+h(r)+h(g)+h(b);
+}
+
+function sampleImageColor(pxData,contour,iw,ih){
+  var r=0,g=0,b=0,count=0;
+  var stride=Math.max(1,Math.floor(contour.length/24));
+  for(var i=0;i<contour.length;i+=stride){
+    var x=Math.max(0,Math.min(iw-1,Math.round(contour[i][0])));
+    var y=Math.max(0,Math.min(ih-1,Math.round(contour[i][1])));
+    var p=(y*iw+x)*4;
+    if(pxData[p+3]<64) continue;
+    r+=pxData[p]; g+=pxData[p+1]; b+=pxData[p+2]; count++;
+  }
+  if(!count) return null;
+  return rgbToHex(r/count,g/count,b/count);
+}
+
+function extractDetailEdges(gray,subjectMask,iw,ih,simplifyEps,minArea,detailStrength){
+  if(detailStrength<=0) return [];
+  var edgeMap=sobelGray(gray,iw,ih);
+  var values=[];
+  for(var i=0;i<edgeMap.length;i++){
+    if(subjectMask[i]) values.push(edgeMap[i]);
+  }
+  if(!values.length) return [];
+  values.sort(function(a,b){return a-b;});
+  var quantile=0.92-detailStrength*0.045;
+  var edgeThreshold=Math.max(18,values[Math.floor(values.length*Math.max(0.48,quantile))]||0);
+  var mask=new Uint8Array(iw*ih);
+  for(var y=1;y<ih-1;y++){
+    for(var x=1;x<iw-1;x++){
+      var idx=y*iw+x;
+      if(!subjectMask[idx]||edgeMap[idx]<edgeThreshold) continue;
+      var neighborCount=0;
+      for(var oy=-1;oy<=1;oy++){
+        for(var ox=-1;ox<=1;ox++){
+          if(ox||oy) neighborCount+=subjectMask[(y+oy)*iw+x+ox]?1:0;
+        }
+      }
+      mask[idx]=neighborCount>=4?1:0;
+    }
+  }
+  return filterContourCandidates(
+    allContoursFromMask(mask,iw,ih,Math.max(0.5,simplifyEps*0.7),Math.max(3,minArea*0.35)),
+    iw,
+    ih,
+    Math.max(3,minArea*0.35)
+  ).slice(0,Math.round(12+detailStrength*8));
+}
+
 // Extract multi-layer contours from image
 // Returns array of {pts, zone, layerIdx, colorHex}
 function extractImageContour(img){
@@ -687,6 +819,7 @@ function extractImageContour(img){
   var numLayers=parseInt(document.getElementById('sl-layers').value)||4;
   var thresh=parseInt(document.getElementById('sl-thresh').value)||128;
   var contrast=(parseInt(document.getElementById('sl-contrast').value)||10)/10;
+  var detailStrength=parseInt(document.getElementById('sl-detail').value)||0;
   var invert=document.getElementById('cb-invert').checked;
 
   // grayscale
@@ -695,6 +828,9 @@ function extractImageContour(img){
     var a=pxData[pi*4+3]; if(a<64){gray[pi]=255;continue;}
     gray[pi]=pxData[pi*4]*0.299+pxData[pi*4+1]*0.587+pxData[pi*4+2]*0.114;
   }
+  var rawGray=new Float32Array(gray);
+  var bgProfile=estimateBackgroundProfile(pxData,gray,iw,ih);
+  var subjectMask=buildSubjectMask(pxData,gray,iw,ih,bgProfile);
 
   // CLAHE: local contrast enhancement — divide into tiles, equalize each
   var tileW=Math.max(4,Math.floor(iw/8)), tileH=Math.max(4,Math.floor(ih/8));
@@ -764,15 +900,26 @@ function extractImageContour(img){
     var t1=Math.pow((li+1)/numLayers, 0.7);
     var hi=gmin+range*t1;
     var mask=new Uint8Array(iw*ih);
-    for(var pi2=0;pi2<iw*ih;pi2++) mask[pi2]=gray[pi2]<=hi?1:0;
+    for(var pi2=0;pi2<iw*ih;pi2++) mask[pi2]=subjectMask[pi2] && gray[pi2]<=hi?1:0;
 
     // get ALL contours in this layer (outer + inner features like eyes/nose)
-    var contours=allContoursFromMask(mask,iw,ih,simplifyEps>0?simplifyEps:0.5,minArea);
+    var contours=filterContourCandidates(
+      allContoursFromMask(mask,iw,ih,simplifyEps>0?simplifyEps:0.5,minArea),
+      iw,
+      ih,
+      minArea
+    );
     contours.forEach(function(contour){
       var smoothed=smoothContour(contour,smoothPasses);
-      layers.push({pts:smoothed, zone:zoneNames[li%zoneNames.length], layerIdx:li});
+      layers.push({pts:smoothed, zone:zoneNames[li%zoneNames.length], layerIdx:li, sourceColor:sampleImageColor(pxData,contour,iw,ih)});
     });
   }
+
+  var detailEdges=extractDetailEdges(rawGray,subjectMask,iw,ih,simplifyEps||1,minArea,detailStrength);
+  detailEdges.forEach(function(contour,di){
+    var smoothed=smoothContour(contour,1);
+    layers.push({pts:smoothed, zone:zoneNames[di%zoneNames.length], layerIdx:numLayers+di, kind:"edge", sourceColor:sampleImageColor(pxData,contour,iw,ih)});
+  });
 
   setContourStatus(layers.length);
   return layers.length>0?layers:null;
@@ -962,16 +1109,13 @@ function drawStray(x,y,ang,len,weight,col,tOffset){
   var fieldAng=flowAngle(x,y);
   // mix: 0.6 flow field, 0.4 original random direction
   var ca=fieldAng*0.6+ang*0.4;
-  if(animating && tOffset) ca+=Math.sin(animT*0.8+tOffset)*0.4;
 
   for(var i=0;i<segs;i++){
     var t=i/segs;
     // re-sample flow field at current position, stronger influence as tip goes further
     var localField=flowAngle(cx2,cy2);
     ca=ca*0.65+localField*0.35 + (sr()-0.5)*0.5;
-    // taper: tip sways more in animation
-    var sway=animating?Math.sin(animT*1.2+(tOffset||0)*2.3+i*0.4)*t*len*0.1:0;
-    cx2+=Math.cos(ca)*segLen+sway;
+    cx2+=Math.cos(ca)*segLen;
     cy2+=Math.sin(ca)*segLen;
     pts.push([cx2,cy2]);
   }
@@ -995,6 +1139,44 @@ function zoneColor(zone, pal){
   if(zone==='stem'||zone==='body'||zone==='rachis'||zone==='pinna_b') return pal[1];
   if(zone==='wing_lower') return pal[2]||pal[0];
   return pal[0];
+}
+
+function shadeColor(hex, amt){
+  var m=String(hex||'#000000').match(/^#?([0-9a-f]{6})$/i);
+  if(!m) return hex||'#000000';
+  var n=parseInt(m[1],16);
+  var r=(n>>16)+amt, g=((n>>8)&255)+amt, b=(n&255)+amt;
+  return rgbToHex(r,g,b);
+}
+
+function blendSampleWithPalette(sampleHex,paletteHex,amount){
+  var sm=String(sampleHex||'').match(/^#?([0-9a-f]{6})$/i);
+  var pm=String(paletteHex||'').match(/^#?([0-9a-f]{6})$/i);
+  if(!sm||!pm) return paletteHex||sampleHex||'#000000';
+  var sn=parseInt(sm[1],16), pn=parseInt(pm[1],16);
+  var sr=(sn>>16), sg=(sn>>8)&255, sb=sn&255;
+  var pr=(pn>>16), pg=(pn>>8)&255, pb=pn&255;
+  var a=Math.max(0,Math.min(1,amount));
+  return rgbToHex(pr*(1-a)+sr*a, pg*(1-a)+sg*a, pb*(1-a)+sb*a);
+}
+
+function getLayerColor(layer,li,n,pal){
+  var paletteColor=li<n*0.35?pal[0]:(li<n*0.65?pal[1]:(pal[2]||pal[1]));
+  var sampleWeight=layer.kind==='edge'?0.28:0.38;
+  return layer.sourceColor ? blendSampleWithPalette(layer.sourceColor,paletteColor,sampleWeight) : paletteColor;
+}
+
+function strokeDimensionalPath(drawPath,col,lw,alpha,closePath){
+  var shadowColor=shadeColor(col,-48);
+  var highlightColor=shadeColor(col,42);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.strokeStyle=shadowColor; ctx.lineWidth=lw*1.55; ctx.globalAlpha=alpha*0.45*alphaScale;
+  ctx.beginPath(); drawPath(); if(closePath) ctx.closePath(); ctx.stroke();
+  ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.globalAlpha=alpha*alphaScale;
+  ctx.beginPath(); drawPath(); if(closePath) ctx.closePath(); ctx.stroke();
+  ctx.strokeStyle=highlightColor; ctx.lineWidth=Math.max(0.35,lw*0.34); ctx.globalAlpha=alpha*0.45*alphaScale;
+  ctx.beginPath(); drawPath(); if(closePath) ctx.closePath(); ctx.stroke();
+  ctx.globalAlpha=1;
 }
 
 // ── Main draw ──
@@ -1078,7 +1260,7 @@ function drawRunningThread(anchors, col, lw){
 }
 
 // Image mode with p5.brush rendering
-function drawImageLaceBrush(cx,cy,R,layers,pal,tw,loose,looseStray,stray,mesh,renderMode){
+function drawImageLaceBrush(cx,cy,R,layers,pal,tw,loose,looseStray,stray,mesh,renderMode,bg){
   initBrush();
   if(!brushReady) return;
   var n=layers.length;
@@ -1092,7 +1274,7 @@ function drawImageLaceBrush(cx,cy,R,layers,pal,tw,loose,looseStray,stray,mesh,re
 
   var gl=brushCv.getContext('webgl2');
   if(gl){gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);}
-  brush.clear();
+  brush.clear(bg);
 
   var step=Math.max(1,Math.floor((11-mesh)*0.5));
 
@@ -1100,8 +1282,9 @@ function drawImageLaceBrush(cx,cy,R,layers,pal,tw,loose,looseStray,stray,mesh,re
     var pts=layer.pts;
     if(pts.length<3) return;
     var t=li/(n-1||1);
-    var col=li<n*0.35?pal[0]:(li<n*0.65?pal[1]:(pal[2]||pal[1]));
-    var lw=tw*(1.6-t*1.1)*0.5;
+    var col=getLayerColor(layer,li,n,pal);
+    var isEdge=layer.kind==='edge';
+    var lw=isEdge ? tw*0.28 : tw*(1.6-t*1.1)*0.5;
 
     // convert to canvas coords (brush space = canvas - W/2, H/2)
     var bpts=[];
@@ -1159,65 +1342,67 @@ function drawImageLace(cx,cy,R,layers,pal,tw,tight,loose,looseSag,looseStray,str
     var pts=layer.pts.map(toCanvas);
     if(pts.length<3) return;
     var t=li/(n-1||1);
+    var isEdge=layer.kind==='edge';
     // color: smooth 3-stop gradient across layers
-    var col=li<n*0.35?pal[0]:(li<n*0.65?pal[1]:(pal[2]||pal[1]));
+    var col=getLayerColor(layer,li,n,pal);
     // weight: dark layers heavier, light layers fine
-    var lw=tw*(1.6-t*1.1);
+    var lw=isEdge?tw*0.42:tw*(1.6-t*1.1);
     // alpha: dark layers solid, light layers translucent (layering effect)
-    var alpha=0.75-t*0.35;
+    var alpha=isEdge?0.28:0.75-t*0.35;
 
     // draw thread: skip points based on mesh (higher mesh = more detailed)
     var step=Math.max(1,Math.floor((11-mesh)*0.5));
-    ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.globalAlpha=alpha*alphaScale;
-    ctx.beginPath();
     var straight=document.getElementById('cb-straight').checked;
     var drape=parseInt(document.getElementById('sl-drape').value)||0;
-    ctx.moveTo(pts[0][0],pts[0][1]);
+    var pathCommands=[];
     for(var pi=step;pi<pts.length;pi+=step){
       var prev=pts[pi-step]||pts[0], curr=pts[pi];
-      // drape: occasional line falls down and breaks
-      if(drape>0 && sr()<drape*0.06){
+      if(!isEdge && drape>0 && sr()<drape*0.06){
         var dropLen=(sr()*drape*sc*0.8+sc*0.3);
         var bpx=prev[0]+(curr[0]-prev[0])*0.5, bpy=prev[1]+(curr[1]-prev[1])*0.5;
-        ctx.lineTo(bpx,bpy);
-        ctx.stroke(); ctx.beginPath();
-        ctx.globalAlpha=alpha*0.4*alphaScale;
-        ctx.moveTo(bpx,bpy);
-        ctx.lineTo(bpx+(sr()-0.5)*sc*0.3, bpy+dropLen);
-        ctx.stroke(); ctx.beginPath();
-        ctx.globalAlpha=alpha*alphaScale;
-        ctx.moveTo(curr[0],curr[1]);
+        pathCommands.push({type:'line',x:bpx,y:bpy});
+        pathCommands.push({type:'move',x:curr[0],y:curr[1]});
+        ctx.strokeStyle=shadeColor(col,-35); ctx.lineWidth=lw*0.65; ctx.globalAlpha=alpha*0.32*alphaScale;
+        ctx.beginPath(); ctx.moveTo(bpx,bpy); ctx.lineTo(bpx+(sr()-0.5)*sc*0.3,bpy+dropLen); ctx.stroke();
         continue;
       }
-      if(straight){
-        ctx.lineTo(curr[0],curr[1]);
+      if(straight || isEdge){
+        pathCommands.push({type:'line',x:curr[0],y:curr[1]});
       } else {
         var mx=(prev[0]+curr[0])/2, my=(prev[1]+curr[1])/2;
         var sag=Math.pow(1-tight/10,0.7)*looseSag*(sc*2.2);
         var perp=Math.atan2(curr[1]-prev[1],curr[0]-prev[0])+Math.PI/2;
-        ctx.quadraticCurveTo(mx+Math.cos(perp)*sag, my+Math.sin(perp)*sag, curr[0],curr[1]);
+        pathCommands.push({type:'quad',cx:mx+Math.cos(perp)*sag,cy:my+Math.sin(perp)*sag,x:curr[0],y:curr[1]});
       }
     }
-    ctx.closePath();
-    ctx.stroke();
-    ctx.globalAlpha=1;
+    function drawLayerPath(){
+      ctx.moveTo(pts[0][0],pts[0][1]);
+      pathCommands.forEach(function(cmd){
+        if(cmd.type==='move') ctx.moveTo(cmd.x,cmd.y);
+        else if(cmd.type==='line') ctx.lineTo(cmd.x,cmd.y);
+        else ctx.quadraticCurveTo(cmd.cx,cmd.cy,cmd.x,cmd.y);
+      });
+    }
+    strokeDimensionalPath(drawLayerPath,col,lw,alpha,!isEdge);
 
     // knots: density from mesh
     var knotEvery=Math.max(1,Math.floor(pts.length/(mesh*2+4)));
-    for(var ki=0;ki<pts.length;ki+=knotEvery){
-      ctx.fillStyle=col;
-      ctx.globalAlpha=alpha*0.85*alphaScale;
-      ctx.beginPath(); ctx.arc(pts[ki][0],pts[ki][1],lw*1.2,0,Math.PI*2); ctx.fill();
+    if(!isEdge){
+      for(var ki=0;ki<pts.length;ki+=knotEvery){
+        ctx.fillStyle=col;
+        ctx.globalAlpha=alpha*0.85*alphaScale;
+        ctx.beginPath(); ctx.arc(pts[ki][0],pts[ki][1],lw*1.2,0,Math.PI*2); ctx.fill();
+      }
     }
     ctx.globalAlpha=1;
 
     // triangle mesh fill (random, sparse, only on larger contours)
-    if(mesh>4 && pts.length>12){
+    if(!isEdge && mesh>4 && pts.length>12){
       drawTriFill(pts, col, mesh-4, tw);
     }
 
     // stray ends
-    if(stray>0){
+    if(!isEdge && stray>0){
       var strayEvery=Math.max(2,Math.floor(pts.length/(stray*2)));
       for(var si=0;si<pts.length;si+=strayEvery){
         var ang=sr()*Math.PI*2;
@@ -1297,18 +1482,15 @@ function draw(){
 
   // ── Image mode ──
   if(shape==='image' && imgContourData && imgContourData.length){
-    if(staticDirty || !animating){
-      var renderMode=document.getElementById('sel-render').value;
-      ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-      ctx.lineCap='round'; ctx.lineJoin='round';
-      if(renderMode==='lace'){
-        drawImageLace(cx,cy,R,imgContourData,pal,tw,tight,loose,looseSag,looseStray,stray,mesh);
-      } else {
-        drawImageLaceBrush(cx,cy,R,imgContourData,pal,tw,loose,looseStray,stray,mesh,renderMode);
-      }
-      staticDirty=false;
+    var imageRenderMode=document.getElementById('sel-render').value;
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    if(imageRenderMode==='lace'){
+      drawImageLace(cx,cy,R,imgContourData,pal,tw,tight,loose,looseSag,looseStray,stray,mesh);
+    } else {
+      drawImageLaceBrush(cx,cy,R,imgContourData,pal,tw,loose,looseStray,stray,mesh,imageRenderMode,bg);
     }
-    if(animating){ raf=requestAnimationFrame(draw); }
+    staticDirty=false;
     return;
   }
 
@@ -1328,8 +1510,8 @@ function draw(){
   edges.forEach(function(e){ connCount[e[0]]++; connCount[e[1]]++; });
   var maxConn=Math.max.apply(null,connCount)||1;
 
-  // ── Static layer: mesh + stitches + knots (only rebuild when not animating or dirty) ──
-  if(staticDirty || !animating){
+  // ── Static layer: mesh + stitches + knots ──
+  if(staticDirty){
     staticCtx.fillStyle=bg; staticCtx.fillRect(0,0,W,H);
     staticCtx.lineCap='round'; staticCtx.lineJoin='round';
     var prevCtx=ctx; ctx=staticCtx;
@@ -1370,7 +1552,7 @@ function draw(){
 
   // ── Brush render mode ──
   if(renderMode!=='lace'){
-    drawWithBrush(nodes,edges,connCount,maxConn,pal,tw,spacing,looseStray);
+    drawWithBrush(nodes,edges,connCount,maxConn,pal,tw,spacing,looseStray,bg);
   }
 
   // ── Animated layer: only stray ends + synapse ──
@@ -1455,7 +1637,7 @@ function buildSwatches(){
       document.getElementById('col-c0').value = PALETTES[pi][0];
       document.getElementById('col-c1').value = PALETTES[pi][1];
       document.getElementById('col-c2').value = PALETTES[pi][2]||PALETTES[pi][0];
-      if(!animating)draw();
+      draw();
     });
     wrap.appendChild(group);
   });
@@ -1468,7 +1650,6 @@ document.getElementById('btn-lang').addEventListener('click',function(){
   localStorage.setItem('laceit-lang',currentLang);
   applyLanguage();
   if(imgContourData) setContourStatus(imgContourData.length);
-  setSoundStatus(document.getElementById('cb-sound').checked ? 'listening' : 'micOff');
 });
 
 // theme toggle
@@ -1478,20 +1659,20 @@ document.getElementById('btn-theme').addEventListener('click',function(){
 });
 
 // sliders
-['sl-size','sl-mesh','sl-tight','sl-loose','sl-weight','sl-stray','sl-aspeed','sl-drape'].forEach(function(id){
+['sl-size','sl-mesh','sl-tight','sl-loose','sl-weight','sl-stray','sl-drape'].forEach(function(id){
   var el=document.getElementById(id);
   var vl=document.getElementById('vl-'+id.replace('sl-',''));
-  el.addEventListener('input',function(){ staticDirty=true; if(vl)vl.textContent=el.value; if(!animating)draw(); });
+  el.addEventListener('input',function(){ staticDirty=true; if(vl)vl.textContent=el.value; draw(); });
 });
 // palette opacity slider
 (function(){
   var el=document.getElementById('sl-palpha');
   var vl=document.getElementById('vl-palpha');
-  el.addEventListener('input',function(){ staticDirty=true; if(vl)vl.textContent=el.value; if(!animating)draw(); });
+  el.addEventListener('input',function(){ staticDirty=true; if(vl)vl.textContent=el.value; draw(); });
 })();
 // custom color pickers
 ['col-c0','col-c1','col-c2'].forEach(function(id){
-  document.getElementById(id).addEventListener('input',function(){ staticDirty=true; if(!animating)draw(); });
+  document.getElementById(id).addEventListener('input',function(){ staticDirty=true; draw(); });
 });
 function updateShapeControls(){
   var val=document.getElementById('sel-shape').value;
@@ -1504,10 +1685,10 @@ updateShapeControls();
   document.getElementById(id).addEventListener('change',function(){
     staticDirty=true;
     updateShapeControls();
-    if(!animating)draw();
+    draw();
   });
 });
-document.getElementById('inp-text').addEventListener('input',function(){ if(!animating)draw(); });
+document.getElementById('inp-text').addEventListener('input',function(){ draw(); });
 
 // image upload
 document.getElementById('inp-image').addEventListener('change',function(e){
@@ -1524,13 +1705,13 @@ document.getElementById('inp-image').addEventListener('change',function(e){
       // auto-switch shape selector to image
       document.getElementById('sel-shape').value='image';
       imgContourData=extractImageContour(img);
-      if(!animating)draw();
+      draw();
     };
     img.src=ev.target.result;
   };
   reader.readAsDataURL(file);
 });
-['sl-layers','sl-simplify','sl-thresh','sl-contrast'].forEach(function(id){
+['sl-layers','sl-simplify','sl-thresh','sl-contrast','sl-detail'].forEach(function(id){
   var el=document.getElementById(id);
   var vl=document.getElementById('vl-'+id.replace('sl-',''));
   el.addEventListener('input',function(){
@@ -1539,13 +1720,13 @@ document.getElementById('inp-image').addEventListener('change',function(e){
     if(previewImg.src&&imgContourData){
       var img=new Image(); img.src=previewImg.src;
       imgContourData=extractImageContour(img);
-      if(!animating)draw();
+      draw();
     }
   });
 });
 
 document.getElementById('btn-regen').addEventListener('click',function(){
-  seed=Math.random()*999999|0; if(!animating)draw();
+  seed=Math.random()*999999|0; draw();
 });
 function saveDownload(filename, mimeType, data){
   if(window.laceitAPI){
@@ -1563,7 +1744,6 @@ function saveDownload(filename, mimeType, data){
 }
 
 function exportPNG(scale){
-  var wasAnim=animating; stopAnim();
   draw();
   setTimeout(function(){
     scale=Math.max(1, Number(scale)||1);
@@ -1578,7 +1758,6 @@ function exportPNG(scale){
       outCtx.drawImage(cv,0,0,out.width,out.height);
       saveDownload('laceit-'+scale+'x.png','image/png',out.toDataURL('image/png'));
     }
-    if(wasAnim) startAnim();
   },80);
 }
 
@@ -1650,7 +1829,6 @@ function makeSVGCtx(W,H){
 }
 
 document.getElementById('btn-svg').addEventListener('click',function(){
-  var wasAnim=animating; stopAnim();
   // swap ctx to SVG proxy, redraw, restore
   var realCtx=ctx;
   var W=cv.width, H=cv.height;
@@ -1664,212 +1842,18 @@ document.getElementById('btn-svg').addEventListener('click',function(){
     +svgCtx.getOps().join('\n')
     +'</svg>';
   saveDownload('laceit.svg','image/svg+xml',svgStr);
-  if(wasAnim) startAnim();
 });
 
-// animation
-function stopAnim(){ if(animRaf){cancelAnimationFrame(animRaf);animRaf=null;} animating=false; staticDirty=true; }
-function startAnim(){
-  animating=true;
-  var speed=parseInt(document.getElementById('sl-aspeed').value)||3;
-  var lastT=0;
-  var interval=1000/24; // cap at 24fps
-  function loop(ts){
-    if(ts-lastT>=interval){
-      lastT=ts;
-      animT+=speed*0.012;
-      draw();
-    }
-    animRaf=requestAnimationFrame(loop);
-  }
-  animRaf=requestAnimationFrame(loop);
-}
 document.getElementById('cb-invert').addEventListener('change',function(){
   var previewImg=document.getElementById('preview-img');
   if(previewImg.src && previewImg.src!==window.location.href){
     var img=new Image(); img.src=previewImg.src;
-    img.onload=function(){ imgContourData=extractImageContour(img); if(!animating)draw(); };
+    img.onload=function(){ imgContourData=extractImageContour(img); draw(); };
   }
-});
-document.getElementById('cb-anim').addEventListener('change',function(){
-  if(this.checked) startAnim(); else { stopAnim(); draw(); }
 });
 
 seed=Math.random()*999999|0;
 draw();
-
-// --- Sound input ---
-let audioCtx = null, analyser = null, micStream = null, soundRaf = null;
-let baseMesh, baseTight, baseDrape, baseLoose, baseWeight;
-// current lerped values
-let curMesh, curTight, curDrape, curLoose, curWeight;
-// spring state for elastic decay
-let springTight = 0, springLoose = 0, springVelT = 0, springVelL = 0;
-
-function setSlider(id, val, min, max) {
-  const el = document.getElementById(id);
-  const vl = document.getElementById('vl-' + id.replace('sl-',''));
-  const clamped = Math.max(min, Math.min(max, Math.round(val)));
-  el.value = clamped;
-  if (vl) vl.textContent = clamped;
-}
-
-function soundLoop() {
-  if (!analyser) return;
-  const buf = new Uint8Array(analyser.frequencyBinCount);
-  analyser.getByteFrequencyData(buf);
-
-  const third = Math.floor(buf.length / 3);
-  let low = 0, mid = 0, high = 0;
-  for (let i = 0; i < third; i++) low += buf[i];
-  for (let i = third; i < third*2; i++) mid += buf[i];
-  for (let i = third*2; i < buf.length; i++) high += buf[i];
-  low  = low  / (third * 255);
-  mid  = mid  / (third * 255);
-  high = high / (third * 255);
-  const rms = (low + mid + high) / 3;
-
-  // map to slider ranges
-  // target values from audio
-  const tgtMesh   = baseMesh   + low  * 6;
-  const tgtTight  = baseTight  + high * 18;
-  const tgtDrape  = baseDrape  + mid  * 6;
-  const tgtLoose  = baseLoose  + rms  * 18;
-  const tgtWeight = baseWeight + rms  * 8;
-
-  // lerp smooth (0.18 = snappy but not instant)
-  const lf = 0.18;
-  curMesh   = curMesh   + (tgtMesh   - curMesh)   * lf;
-  curDrape  = curDrape  + (tgtDrape  - curDrape)  * lf;
-  curWeight = curWeight + (tgtWeight - curWeight) * lf;
-
-  // spring physics for tight + loose (elastic bounce)
-  const stiffness = 0.22, damping = 0.62;
-  springVelT += (tgtTight - springTight) * stiffness;
-  springVelT *= damping;
-  springTight += springVelT;
-  springVelL += (tgtLoose - springLoose) * stiffness;
-  springVelL *= damping;
-  springLoose += springVelL;
-
-  setSlider('sl-mesh',   curMesh,    2, 10);
-  setSlider('sl-tight',  springTight, 0, 10);
-  setSlider('sl-drape',  curDrape,   0, 10);
-  setSlider('sl-loose',  springLoose, 0, 10);
-  setSlider('sl-weight', curWeight,  1, 10);
-
-  // draw spectrum visualizer — smooth curve with low/mid/high color zones
-  const viz = document.getElementById('sound-viz');
-  if (viz) {
-    const vctx = viz.getContext('2d');
-    const w = viz.width, h = viz.height;
-    vctx.clearRect(0, 0, w, h);
-
-    const bars = 48;
-    const step = Math.floor(buf.length / bars);
-    const pts = [];
-    for (let i = 0; i < bars; i++) {
-      let sum = 0;
-      for (let j = 0; j < step; j++) sum += buf[i * step + j];
-      pts.push(sum / (step * 255));
-    }
-
-    // smooth with simple moving average
-    const smooth = pts.map((v, i) => {
-      const s = pts.slice(Math.max(0,i-2), i+3);
-      return s.reduce((a,b)=>a+b,0)/s.length;
-    });
-
-    // draw filled curve
-    vctx.beginPath();
-    vctx.moveTo(0, h);
-    smooth.forEach((v, i) => {
-      const x = (i / (bars - 1)) * w;
-      const y = h - v * (h * 0.92);
-      if (i === 0) vctx.lineTo(x, y);
-      else {
-        const px = ((i-1) / (bars-1)) * w;
-        const py = h - smooth[i-1] * (h * 0.92);
-        const cx = (px + x) / 2;
-        vctx.bezierCurveTo(cx, py, cx, y, x, y);
-      }
-    });
-    vctx.lineTo(w, h);
-    vctx.closePath();
-
-    // gradient: low=teal, mid=violet, high=rose
-    const grad = vctx.createLinearGradient(0, 0, w, 0);
-    grad.addColorStop(0,    'hsla(180,70%,55%,0.9)');
-    grad.addColorStop(0.4,  'hsla(270,65%,60%,0.9)');
-    grad.addColorStop(1,    'hsla(340,70%,60%,0.9)');
-    vctx.fillStyle = grad;
-    vctx.fill();
-
-    // draw vertical tick lines at band boundaries
-    vctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    vctx.lineWidth = 1;
-    [0.33, 0.66].forEach(pos => {
-      vctx.beginPath();
-      vctx.moveTo(pos * w, 0);
-      vctx.lineTo(pos * w, h);
-      vctx.stroke();
-    });
-
-    // band labels
-    vctx.fillStyle = 'rgba(255,255,255,0.35)';
-    vctx.font = '8px monospace';
-    vctx.fillText('low', 3, h - 3);
-    vctx.fillText('mid', w * 0.38, h - 3);
-    vctx.fillText('high', w * 0.7, h - 3);
-  }
-
-  draw();
-  soundRaf = requestAnimationFrame(soundLoop);
-}
-
-async function startSound() {
-  try {
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
-    analyser  = audioCtx.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.5;
-    audioCtx.createMediaStreamSource(micStream).connect(analyser);
-
-    // capture base values
-    baseMesh   = +document.getElementById('sl-mesh').value;
-    baseTight  = +document.getElementById('sl-tight').value;
-    baseDrape  = +document.getElementById('sl-drape').value;
-    baseLoose  = +document.getElementById('sl-loose').value;
-    baseWeight = +document.getElementById('sl-weight').value;
-    // init lerp + spring from base
-    curMesh = baseMesh; curTight = baseTight; curDrape = baseDrape;
-    curLoose = baseLoose; curWeight = baseWeight;
-    springTight = baseTight; springLoose = baseLoose;
-    springVelT = 0; springVelL = 0;
-
-    setSoundStatus('listening');
-    document.getElementById('sound-viz').style.display = 'block';
-    soundLoop();
-  } catch(e) {
-    setSoundStatus('micError', e.message);
-    document.getElementById('cb-sound').checked = false;
-  }
-}
-
-function stopSound() {
-  if (soundRaf) cancelAnimationFrame(soundRaf);
-  if (micStream) micStream.getTracks().forEach(t => t.stop());
-  if (audioCtx)  audioCtx.close();
-  analyser = audioCtx = micStream = soundRaf = null;
-  setSoundStatus('micOff');
-  document.getElementById('sound-viz').style.display = 'none';
-  draw();
-}
-
-document.getElementById('cb-sound').addEventListener('change', function() {
-  if (this.checked) startSound(); else stopSound();
-});
 </script>
 </body>
 </html>

@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Embroidery Lab</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f4f0e8;--panel:#fbf8f1;--panel-2:#ffffff;--line:#d8d0c2;--text:#24211d;--muted:#7d7468;--accent:#bf8e36;--blue:#477fb3;--cream:#dfc99f;--rust:#c65f22}
+html,body{height:100%;font-family:Outfit,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+body{display:grid;grid-template-columns:312px 1fr}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:18px;overflow:auto;box-shadow:10px 0 32px rgba(68,50,25,.08)}
+main{min-width:0;display:flex;align-items:center;justify-content:center;background:#eee7dc}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.brand h1{font-size:18px;letter-spacing:0;font-weight:650}.brand span{font-size:11px;color:var(--muted)}
+.group{display:grid;gap:10px;padding:14px 0;border-bottom:1px solid var(--line)}
+.label{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted)}
+.row{display:grid;grid-template-columns:86px 1fr 34px;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.row strong{color:var(--text);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=number]{width:100%;height:28px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);color:var(--text);font:inherit;font-size:12px;padding:0 8px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+input[type=color]{width:34px;height:24px;background:transparent;border:1px solid var(--line);border-radius:5px}
+select{height:28px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);color:var(--text);font:inherit;font-size:12px;padding:0 8px}
+button,.file{height:32px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);color:var(--text);font:inherit;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 0 rgba(255,255,255,.7)}
+button:hover,.file:hover{border-color:var(--accent);color:var(--accent)}
+.file input{display:none}
+.swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.note{font-size:11px;line-height:1.45;color:var(--muted)}
+#stage{position:relative;width:min(82vw,980px);height:min(86vh,980px);display:flex;align-items:center;justify-content:center}
+#pro-canvas{width:100%;height:100%;max-width:980px;max-height:980px;object-fit:contain;border-radius:42px;box-shadow:0 22px 80px rgba(68,50,25,.18),inset 0 0 0 1px rgba(255,255,255,.22);background:#070707}
+.status{font-size:11px;color:var(--muted);min-height:16px}
+@media(max-width:820px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh;border-right:0;border-bottom:1px solid var(--line)}#stage{width:100vw;height:58vh;padding:10px}}
+</style>
+</head>
+<body>
+<aside>
+  <div class="brand"><h1>Embroidery Lab</h1><span>raster studio</span></div>
+  <div class="group">
+    <div class="label">Source</div>
+    <label class="file">Upload image<input id="pro-upload" type="file" accept="image/*"></label>
+    <div class="row"><strong>Cutout</strong><input id="pro-cutout" type="checkbox" checked><span></span></div>
+    <div class="row"><strong>Tolerance</strong><input id="pro-tolerance" type="range" min="24" max="112" value="64"><span id="pro-tolerance-val">64</span></div>
+    <div class="status" id="pro-status">Using procedural bird sample.</div>
+  </div>
+  <div class="group">
+    <div class="label">Embroidery</div>
+    <div class="row"><strong>Stitch</strong><select id="pro-stitch-style"><option value="auto">Auto</option><option value="running">Running</option><option value="back">Back</option><option value="satin">Satin</option><option value="long-short">Long-short</option><option value="seed">Seed</option><option value="french-knot">French knot</option><option value="chain">Chain</option><option value="blanket">Blanket</option><option value="cross">Cross</option><option value="tatami">Tatami</option></select><span></span></div>
+    <div class="row"><strong>Contour</strong><select id="pro-contour-style"><option value="back" selected>Back</option><option value="none">None</option><option value="running">Running</option><option value="chain">Chain</option><option value="blanket">Blanket</option></select><span></span></div>
+    <div class="row"><strong>Detail</strong><input id="pro-detail" type="range" min="1" max="24" value="10"><span id="pro-detail-val">10</span></div>
+    <div class="row"><strong>Size</strong><input id="pro-size" type="range" min="60" max="140" value="100"><span id="pro-size-val">100</span></div>
+    <div class="row"><strong>Thread</strong><input id="pro-thread" type="range" min="1" max="10" value="5"><span id="pro-thread-val">5</span></div>
+    <div class="row"><strong>Relief</strong><input id="pro-relief" type="range" min="0" max="10" value="7"><span id="pro-relief-val">7</span></div>
+    <div class="row"><strong>Seed</strong><input id="pro-seed" type="number" value="8" min="1" step="1"><span></span></div>
+    <div class="row"><strong>Count</strong><span id="pro-stitch-count">0</span><span></span></div>
+  </div>
+  <div class="group">
+    <div class="label">Palette</div>
+    <div class="swatches">
+      <input id="pro-c1" type="color" value="#2e6f9e">
+      <input id="pro-c2" type="color" value="#ddc493">
+      <input id="pro-c3" type="color" value="#c85b1c">
+    </div>
+    <div class="row"><strong>Bg</strong><input id="pro-bg" type="color" value="#070707"><span></span></div>
+  </div>
+  <div class="group">
+    <button id="pro-regenerate">Regenerate</button>
+    <button id="pro-export">Export PNG</button>
+    <button id="pro-export-json">Export JSON</button>
+    <p class="note">This prototype favors PNG texture, directional thread fields, and material depth. It is intentionally separate from SVG Lace mode.</p>
+  </div>
+</aside>
+<main>
+  <div id="stage"><canvas id="pro-canvas" width="1200" height="1200"></canvas></div>
+</main>
+<script>
+var canvas=document.getElementById('pro-canvas');
+var ctx=canvas.getContext('2d',{willReadFrequently:true});
+var sourceImage=null;
+var currentStitchPlan=null;
+var renderScale=1;
+var lightDir={x:-.55,y:-.82};
+var rng=1;
+function rand(){rng=(rng*1664525+1013904223)>>>0;return rng/4294967296}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function hexToRgb(hex){var n=parseInt(String(hex).replace('#',''),16);return[(n>>16)&255,(n>>8)&255,n&255]}
+function rgbToCss(c){return 'rgb('+Math.round(c[0])+' '+Math.round(c[1])+' '+Math.round(c[2])+')'}
+function mix(a,b,t){return[a[0]*(1-t)+b[0]*t,a[1]*(1-t)+b[1]*t,a[2]*(1-t)+b[2]*t]}
+function shade(c,amt){return[c[0]+amt,c[1]+amt,c[2]+amt]}
+
+function getControls(){
+  return {
+    cutout:document.getElementById('pro-cutout').checked,
+    tolerance:+document.getElementById('pro-tolerance').value,
+    detail:+document.getElementById('pro-detail').value,
+    stitchStyle:document.getElementById('pro-stitch-style').value,
+    contourStyle:document.getElementById('pro-contour-style').value,
+    randomSeed:+document.getElementById('pro-seed').value||8,
+    size:+document.getElementById('pro-size').value/100,
+    thread:+document.getElementById('pro-thread').value,
+    relief:+document.getElementById('pro-relief').value,
+    bg:document.getElementById('pro-bg').value,
+    colors:[hexToRgb(document.getElementById('pro-c1').value),hexToRgb(document.getElementById('pro-c2').value),hexToRgb(document.getElementById('pro-c3').value)]
+  };
+}
+
+function drawKnitBackground(bg){
+  ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+  var base=hexToRgb(bg);
+  ctx.save();
+  ctx.globalAlpha=.56;
+  for(var x=-20;x<canvas.width+30;x+=18){
+    for(var y=-20;y<canvas.height+30;y+=26){
+      var c=shade(base,16+rand()*18);
+      ctx.strokeStyle=rgbToCss(c);
+      ctx.lineWidth=2.2+rand()*1.4;
+      ctx.beginPath();
+      ctx.moveTo(x+rand()*4,y);
+      ctx.bezierCurveTo(x+8,y+8,x+2,y+17,x+12,y+25);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x+16+rand()*4,y);
+      ctx.bezierCurveTo(x+8,y+8,x+18,y+17,x+8,y+25);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function imageDataFromSource(img){
+  var off=document.createElement('canvas');
+  var scale=Math.min(360/img.width,360/img.height,1);
+  off.width=Math.max(1,Math.round(img.width*scale));
+  off.height=Math.max(1,Math.round(img.height*scale));
+  var octx=off.getContext('2d',{willReadFrequently:true});
+  octx.drawImage(img,0,0,off.width,off.height);
+  return {canvas:off,data:octx.getImageData(0,0,off.width,off.height),scale:scale};
+}
+
+function cleanupSubjectMask(mask,w,h){
+  var cleaned=new Uint8Array(mask.length);
+  for(var y=1;y<h-1;y++){
+    for(var x=1;x<w-1;x++){
+      var i=y*w+x,sum=mask[i];
+      sum+=mask[i-1]+mask[i+1]+mask[i-w]+mask[i+w]+mask[i-w-1]+mask[i-w+1]+mask[i+w-1]+mask[i+w+1];
+      cleaned[i]=sum>=4?1:0;
+    }
+  }
+  return cleaned;
+}
+
+function featherSubjectMask(mask,w,h){
+  var feathered=new Uint8Array(mask.length);
+  for(var y=1;y<h-1;y++){
+    for(var x=1;x<w-1;x++){
+      var i=y*w+x;
+      if(!mask[i])continue;
+      var nearBg=!mask[i-1]||!mask[i+1]||!mask[i-w]||!mask[i+w];
+      feathered[i]=nearBg?1:1;
+    }
+  }
+  return feathered;
+}
+
+function buildSubjectMask(imageData,cutout,tolerance){
+  var w=imageData.width,h=imageData.height,d=imageData.data;
+  if(!cutout){
+    var alphaMask=new Uint8Array(w*h);
+    for(var ai=0;ai<w*h;ai++)alphaMask[ai]=d[ai*4+3]>40?1:0;
+    return alphaMask;
+  }
+  var edge=[],sum=[0,0,0],count=0;
+  function add(x,y){var p=(y*w+x)*4;sum[0]+=d[p];sum[1]+=d[p+1];sum[2]+=d[p+2];count++}
+  for(var x=0;x<w;x+=4){add(x,0);add(x,h-1)}
+  for(var y=0;y<h;y+=4){add(0,y);add(w-1,y)}
+  var bg=sum.map(v=>v/(count||1));
+  var bgMask=new Uint8Array(w*h),queue=[];
+  function similar(i){var p=i*4;if(d[p+3]<40)return true;return Math.hypot(d[p]-bg[0],d[p+1]-bg[1],d[p+2]-bg[2])<tolerance}
+  function push(i){if(i<0||i>=w*h||bgMask[i]||!similar(i))return;bgMask[i]=1;queue.push(i)}
+  for(var x2=0;x2<w;x2++){push(x2);push((h-1)*w+x2)}
+  for(var y2=0;y2<h;y2++){push(y2*w);push(y2*w+w-1)}
+  for(var qi=0;qi<queue.length;qi++){var i=queue[qi],x3=i%w,y3=(i/w)|0;if(x3>0)push(i-1);if(x3<w-1)push(i+1);if(y3>0)push(i-w);if(y3<h-1)push(i+w)}
+  var mask=new Uint8Array(w*h);
+  for(var mi=0;mi<mask.length;mi++)mask[mi]=bgMask[mi]?0:1;
+  return featherSubjectMask(cleanupSubjectMask(mask,w,h),w,h);
+}
+
+function kMeansColors(imageData,mask,k){
+  var w=imageData.width,h=imageData.height,d=imageData.data;
+  var pts=[];
+  for(var i=0;i<w*h;i+=3){
+    if(!mask[i])continue;
+    var p=i*4;
+    pts.push([d[p],d[p+1],d[p+2]]);
+  }
+  if(!pts.length)return [[40,90,140],[220,198,150],[190,90,35]];
+  var centers=[pts[0],pts[(pts.length*.45)|0]||pts[0],pts[(pts.length*.85)|0]||pts[0]].slice(0,k);
+  for(var iter=0;iter<8;iter++){
+    var sums=centers.map(()=>[0,0,0,0]);
+    pts.forEach(function(pt){
+      var best=0,bd=Infinity;
+      centers.forEach(function(c,ci){var dist=Math.hypot(pt[0]-c[0],pt[1]-c[1],pt[2]-c[2]);if(dist<bd){bd=dist;best=ci}});
+      sums[best][0]+=pt[0];sums[best][1]+=pt[1];sums[best][2]+=pt[2];sums[best][3]++;
+    });
+    centers=centers.map(function(c,ci){var s=sums[ci];return s[3]?[s[0]/s[3],s[1]/s[3],s[2]/s[3]]:c});
+  }
+  centers.sort(function(a,b){return (a[0]+a[1]+a[2])-(b[0]+b[1]+b[2])});
+  return centers;
+}
+
+function makeRegionMap(imageData,mask,colors){
+  var w=imageData.width,h=imageData.height,d=imageData.data,map=new Uint8Array(w*h),gray=new Float32Array(w*h);
+  var centers=kMeansColors(imageData,mask,3);
+  for(var i=0;i<w*h;i++){
+    var p=i*4,g=d[p]*.299+d[p+1]*.587+d[p+2]*.114;gray[i]=g;
+    if(!mask[i]){map[i]=255;continue}
+    var best=0,bd=Infinity;
+    centers.forEach(function(c,ci){var dist=Math.hypot(d[p]-c[0],d[p+1]-c[1],d[p+2]-c[2]);if(dist<bd){bd=dist;best=ci}});
+    map[i]=best;
+  }
+  return {map:map,gray:gray,w:w,h:h,centers:centers};
+}
+
+function boundsFromMask(mask,w,h){
+  var minX=w,minY=h,maxX=0,maxY=0,found=false;
+  for(var y=0;y<h;y++)for(var x=0;x<w;x++)if(mask[y*w+x]){found=true;if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y}
+  return found?{minX,minY,maxX,maxY,w:maxX-minX+1,h:maxY-minY+1}:{minX:0,minY:0,maxX:w,maxY:h,w:w,h:h};
+}
+
+function computeGradientField(gray,w,h){
+  var angle=new Float32Array(w*h),mag=new Float32Array(w*h);
+  function gv(x,y){return gray[y*w+x]||0}
+  for(var y=1;y<h-1;y++){
+    for(var x=1;x<w-1;x++){
+      var gx=-gv(x-1,y-1)-2*gv(x-1,y)-gv(x-1,y+1)+gv(x+1,y-1)+2*gv(x+1,y)+gv(x+1,y+1);
+      var gy=-gv(x-1,y-1)-2*gv(x,y-1)-gv(x+1,y-1)+gv(x-1,y+1)+2*gv(x,y+1)+gv(x+1,y+1);
+      var i=y*w+x;
+      mag[i]=Math.hypot(gx,gy);
+      angle[i]=Math.atan2(gy,gx)+Math.PI/2;
+    }
+  }
+  return {angle:angle,mag:mag,w:w,h:h};
+}
+
+function directionAt(x,y,region,bounds,field){
+  var idx=(Math.round(y)*field.w+Math.round(x))|0;
+  var local=field.angle[idx]||0;
+  if(field.mag[idx]>18)return local;
+  var nx=(x-bounds.minX)/(bounds.w||1)-.5,ny=(y-bounds.minY)/(bounds.h||1)-.5;
+  if(region===0)return Math.atan2(ny,nx)+Math.PI/2;
+  if(region===1)return -Math.PI/4+nx*.8;
+  if(region===2)return Math.PI/2+ny*.7;
+  return 0;
+}
+
+function sortComponentAlongAxis(component){
+  var cx=0,cy=0;
+  component.forEach(function(p){cx+=p[0];cy+=p[1]});
+  cx/=component.length;cy/=component.length;
+  var xx=0,xy=0,yy=0;
+  component.forEach(function(p){var dx=p[0]-cx,dy=p[1]-cy;xx+=dx*dx;xy+=dx*dy;yy+=dy*dy});
+  var theta=.5*Math.atan2(2*xy,xx-yy);
+  var ax=Math.cos(theta),ay=Math.sin(theta);
+  return component.slice().sort(function(a,b){return ((a[0]-cx)*ax+(a[1]-cy)*ay)-((b[0]-cx)*ax+(b[1]-cy)*ay)});
+}
+
+function pointKey(x,y){return x+','+y}
+var neighborOffsets=[];
+for(var noY=-2;noY<=2;noY++)for(var noX=-2;noX<=2;noX++)if(noX||noY)neighborOffsets.push([noX,noY]);
+
+function buildPointIndex(points){
+  var index=new Map();
+  points.forEach(function(p,i){index.set(pointKey(p[0],p[1]),i)});
+  return index;
+}
+
+function endpointScore(point,index){
+  var count=0,nearest=Infinity;
+  neighborOffsets.forEach(function(o){
+    var ni=index.get(pointKey(point[0]+o[0],point[1]+o[1]));
+    if(ni==null)return;
+    var d=Math.hypot(o[0],o[1]);
+    if(d<=1.6)count++;
+    if(d<nearest)nearest=d;
+  });
+  return (4-count)*10+(nearest===Infinity?4:nearest);
+}
+
+function nearestUnusedNeighbor(point,points,used,lastAngle,index){
+  var best=-1,bd=Infinity;
+  for(var oi=0;oi<neighborOffsets.length;oi++){
+    var o=neighborOffsets[oi],i=index.get(pointKey(point[0]+o[0],point[1]+o[1]));
+    if(i==null)continue;
+    if(used[i])continue;
+    var p=points[i],dx=p[0]-point[0],dy=p[1]-point[1],d=Math.hypot(dx,dy);
+    if(d>3.2)continue;
+    var turn=0;
+    if(lastAngle!=null){
+      var a=Math.atan2(dy,dx);
+      turn=Math.abs(Math.atan2(Math.sin(a-lastAngle),Math.cos(a-lastAngle)));
+    }
+    var score=d+turn*.85;
+    if(score<bd){bd=score;best=i}
+  }
+  return best;
+}
+
+function orderComponentPath(comp){
+  if(comp.length<3)return comp;
+  var points=sortComponentAlongAxis(comp);
+  var index=buildPointIndex(points);
+  var used=new Uint8Array(points.length),ordered=[];
+  var start=0,bestScore=-Infinity;
+  for(var i=0;i<points.length;i++){
+    var score=endpointScore(points[i],index);
+    if(score>bestScore){bestScore=score;start=i}
+  }
+  var cur=start,lastAngle=null;
+  while(ordered.length<points.length){
+    used[cur]=1;ordered.push(points[cur]);
+    var next=nearestUnusedNeighbor(points[cur],points,used,lastAngle,index);
+    if(next<0){
+      var fallback=-1,fd=Infinity;
+      for(var j=0;j<points.length;j++){
+        if(used[j])continue;
+        var d=Math.hypot(points[j][0]-points[cur][0],points[j][1]-points[cur][1]);
+        if(d<fd){fd=d;fallback=j}
+      }
+      if(fallback<0)break;
+      cur=fallback;lastAngle=null;
+      continue;
+    }
+    lastAngle=Math.atan2(points[next][1]-points[cur][1],points[next][0]-points[cur][0]);
+    cur=next;
+  }
+  return ordered;
+}
+
+function traceGuideComponents(edgeMask,w,h){
+  var seen=new Uint8Array(w*h),components=[];
+  var dirs=[1,-1,w,-w,w+1,w-1,-w+1,-w-1];
+  for(var i=0;i<w*h;i++){
+    if(!edgeMask[i]||seen[i])continue;
+    var q=[i],comp=[];seen[i]=1;
+    for(var qi=0;qi<q.length;qi++){
+      var cur=q[qi],x=cur%w,y=(cur/w)|0;
+      comp.push([x,y]);
+      dirs.forEach(function(d){
+        var ni=cur+d,nx=ni%w,ny=(ni/w)|0;
+        if(ni<0||ni>=w*h||seen[ni]||!edgeMask[ni])return;
+        if(Math.abs(nx-x)>1||Math.abs(ny-y)>1)return;
+        seen[ni]=1;q.push(ni);
+      });
+    }
+    if(comp.length>=8)components.push(orderComponentPath(comp));
+  }
+  components.sort(function(a,b){return b.length-a.length});
+  return components;
+}
+
+function segmentGuideComponent(component,detail){
+  var step=Math.max(2,Math.round(8-detail*.28));
+  var maxJump=Math.max(3.5,9-detail*.28);
+  var maxPoints=Math.round(18+detail*1.2);
+  var lines=[],current=[];
+  for(var i=0;i<component.length;i+=step){
+    var p=component[i];
+    if(current.length){
+      var last=current[current.length-1],jump=Math.hypot(p[0]-last[0],p[1]-last[1]);
+      if(jump>maxJump||current.length>=maxPoints){
+        if(current.length>=4)lines.push(current);
+        current=[];
+      }
+    }
+    current.push(p);
+  }
+  if(current.length>=4)lines.push(current);
+  return lines;
+}
+
+function extractGuideLines(regions,mask,field,detail){
+  var w=regions.w,h=regions.h,edgeMask=new Uint8Array(w*h);
+  var threshold=30;
+  for(var y=2;y<h-2;y++){
+    for(var x=2;x<w-2;x++){
+      var i=y*w+x;
+      if(!mask[i])continue;
+      var border=regions.map[i]!==regions.map[i-1]||regions.map[i]!==regions.map[i+1]||regions.map[i]!==regions.map[i-w]||regions.map[i]!==regions.map[i+w];
+      if(border||field.mag[i]>threshold+(16-detail))edgeMask[i]=1;
+    }
+  }
+  var guideLines=[];
+  traceGuideComponents(edgeMask,w,h).forEach(function(component){
+    segmentGuideComponent(component,detail).forEach(function(line){guideLines.push(line)});
+  });
+  return guideLines.slice(0,Math.round(18+detail*3));
+}
+
+function isSilhouetteEdge(mask,w,i){
+  return !mask[i-1]||!mask[i+1]||!mask[i-w]||!mask[i+w];
+}
+
+function extractContourGuideLines(regions,mask,field,detail){
+  var w=regions.w,h=regions.h,edgeMask=new Uint8Array(w*h);
+  for(var y=2;y<h-2;y++){
+    for(var x=2;x<w-2;x++){
+      var i=y*w+x;
+      if(!mask[i])continue;
+      if(isSilhouetteEdge(mask,w,i))edgeMask[i]=1;
+    }
+  }
+  var guideLines=[];
+  traceGuideComponents(edgeMask,w,h).forEach(function(component){
+    segmentGuideComponent(component,detail).forEach(function(line){guideLines.push(line)});
+  });
+  return guideLines.slice(0,Math.round(12+detail*1.8));
+}
+
+function nearestGuideAngle(x,y,guideLines){
+  var best=null,bd=Infinity;
+  guideLines.forEach(function(line){
+    for(var i=1;i<line.length;i+=Math.max(1,Math.floor(line.length/16))){
+      var p=line[i],d=(p[0]-x)*(p[0]-x)+(p[1]-y)*(p[1]-y);
+      if(d<bd){
+        var prev=line[i-1],next=line[Math.min(line.length-1,i+1)];
+        bd=d;best=Math.atan2(next[1]-prev[1],next[0]-prev[0]);
+      }
+    }
+  });
+  return best==null?null:{angle:best,dist:Math.sqrt(bd)};
+}
+
+function blendAngles(a,b,t){
+  return Math.atan2(Math.sin(a)*(1-t)+Math.sin(b)*t,Math.cos(a)*(1-t)+Math.cos(b)*t);
+}
+
+function resolveStitchKernel(stitchStyle,region,detail){
+  if(stitchStyle&&stitchStyle!=='auto')return stitchStyle;
+  if(region===0)return 'cross';
+  if(region===1)return 'plus';
+  return detail>14?'plus':'cross';
+}
+
+function regionStitchStrategy(region,detail,stitchStyle){
+  var kernel=resolveStitchKernel(stitchStyle,region,detail);
+  var locked=!!(stitchStyle&&stitchStyle!=='auto');
+  if(region===0)return {base:Math.PI/4,kernel:kernel,len:.96,jitter:.028,locked:locked};
+  if(region===1)return {base:Math.PI/2,kernel:kernel,len:.88,jitter:.018,locked:locked};
+  return {base:0,kernel:kernel,len:.78,jitter:.022,locked:locked};
+}
+
+function quantizeStitchAngle(angle,region,guideInfluence){
+  var base=regionStitchStrategy(region,10,'auto').base;
+  var step=Math.PI/4;
+  var snapped=Math.round((angle-base)/step)*step+base;
+  return blendAngles(snapped,angle,Math.max(0,.18-guideInfluence*.12));
+}
+
+function chooseKernelType(region,guideInfluence,detail,gray,strategy){
+  if(strategy&&strategy.locked)return strategy.kernel;
+  var stable=guideInfluence<.42&&detail>8;
+  if(strategy&&strategy.kernel==='plus'&&guideInfluence<.68)return 'plus';
+  if(stable&&region!==2)return 'plus';
+  if(gray>205&&guideInfluence<.58)return 'plus';
+  return 'x';
+}
+
+function edgeDensityBoost(guideInfluence,detail){
+  return Math.max(0,guideInfluence)*(detail>10?.22:.14);
+}
+
+function lightingAmount(angle){
+  var nx=-Math.sin(angle),ny=Math.cos(angle);
+  return clamp((nx*lightDir.x+ny*lightDir.y+1)/2,0,1);
+}
+
+function contourRhythm(prev,p,next,field,idx){
+  var a1=Math.atan2(p[1]-prev[1],p[0]-prev[0]);
+  var a2=Math.atan2(next[1]-p[1],next[0]-p[0]);
+  var bend=Math.abs(Math.atan2(Math.sin(a2-a1),Math.cos(a2-a1)));
+  var edge=clamp((field&&field.mag[idx]||0)/80,0,1);
+  return 1+bend*.42+edge*.38;
+}
+
+function traceThreadPath(x,y,angle,len,region,mask,regions,bounds){
+  var pts=[];
+  var steps=8;
+  for(var s=-steps;s<=steps;s++){
+    var px=x+Math.cos(angle)*len*s/steps;
+    var py=y+Math.sin(angle)*len*s/steps;
+    var ix=Math.round(px),iy=Math.round(py),ni=iy*regions.w+ix;
+    if(ix<0||iy<0||ix>=regions.w||iy>=regions.h)break;
+    if(!mask[ni]||regions.map[ni]!==region)break;
+    var cp=canvasPoint(px,py,bounds);
+    pts.push([cp[0],cp[1]]);
+  }
+  return pts.length>1?pts:null;
+}
+
+function canvasPoint(x,y,bounds){
+  var scale=Math.min(canvas.width*.74/(bounds.w||1),canvas.height*.74/(bounds.h||1));
+  scale*=renderScale;
+  return [canvas.width/2+(x-(bounds.minX+bounds.maxX)/2)*scale,canvas.height/2+(y-(bounds.minY+bounds.maxY)/2)*scale,scale];
+}
+
+function drawThreadStroke(points,color,width,relief){
+  if(points.length<2)return;
+  var strokeAngle=Math.atan2(points[points.length-1][1]-points[0][1],points[points.length-1][0]-points[0][0]);
+  var light=lightingAmount(strokeAngle);
+  ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.strokeStyle=rgbToCss(shade(color,-62+light*14));ctx.lineWidth=width*1.85;ctx.globalAlpha=.5;
+  ctx.beginPath();ctx.moveTo(points[0][0]+1.2,points[0][1]+1.8);for(var i=1;i<points.length;i++)ctx.lineTo(points[i][0]+1.2,points[i][1]+1.8);ctx.stroke();
+  ctx.strokeStyle=rgbToCss(shade(color,light*12));ctx.lineWidth=width;ctx.globalAlpha=.94;
+  ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(var j=1;j<points.length;j++)ctx.lineTo(points[j][0],points[j][1]);ctx.stroke();
+  ctx.strokeStyle=rgbToCss(shade(color,34+light*42));ctx.lineWidth=Math.max(.7,width*.32);ctx.globalAlpha=.18+light*.18+.035*relief;
+  ctx.beginPath();ctx.moveTo(points[0][0]-width*.12,points[0][1]-width*.14);for(var k=1;k<points.length;k++)ctx.lineTo(points[k][0]-width*.12,points[k][1]-width*.14);ctx.stroke();
+  drawThreadHighlight(points,color,width,relief);
+  ctx.globalAlpha=1;
+}
+
+function drawThreadHighlight(points,color,width,relief){
+  if(points.length<2)return;
+  var angle=Math.atan2(points[points.length-1][1]-points[0][1],points[points.length-1][0]-points[0][0]);
+  var light=lightingAmount(angle);
+  ctx.strokeStyle=rgbToCss(shade(color,52+light*58));
+  ctx.lineWidth=Math.max(.35,width*.16);
+  ctx.globalAlpha=.08+light*.22+.02*relief;
+  ctx.beginPath();
+  ctx.moveTo(points[0][0]-width*.18,points[0][1]-width*.2);
+  for(var i=1;i<points.length;i++)ctx.lineTo(points[i][0]-width*.18,points[i][1]-width*.2);
+  ctx.stroke();
+}
+
+function drawDoubleStrand(x1,y1,x2,y2,color,width,relief){
+  var dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1;
+  var nx=-dy/len,ny=dx/len,gap=Math.max(.55,width*.42);
+  [[-gap,gap],[gap,-gap]].forEach(function(offsets,oi){
+    var ox=nx*offsets[0],oy=ny*offsets[0];
+    drawThreadStroke([[x1+ox,y1+oy],[x2+ox,y2+oy]],oi?shade(color,16):color,width*.58,relief);
+  });
+}
+
+function drawCrossStitch(x,y,angle,len,color,width,relief){
+  var a1=angle+.72,a2=angle-.72;
+  var jitter=(rand()-.5)*.7;
+  var l=len*(.86+rand()*.22);
+  drawDoubleStrand(x-Math.cos(a1)*l/2,y-Math.sin(a1)*l/2,x+Math.cos(a1)*l/2,y+Math.sin(a1)*l/2,shade(color,-10),width,relief);
+  drawDoubleStrand(x-Math.cos(a2)*(l+jitter)/2,y-Math.sin(a2)*(l+jitter)/2,x+Math.cos(a2)*(l+jitter)/2,y+Math.sin(a2)*(l+jitter)/2,shade(color,22),width*.9,relief);
+}
+
+function drawFillCrossStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var len=fillLen*cp[2]*(.78+rand()*.18);
+  var w=width*(.72+rand()*.12);
+  drawCrossStitch(cp[0],cp[1],angle,len,shade(color,(rand()-.5)*18),w,relief);
+}
+
+function drawCrossKernelStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  drawFillCrossStitch(x,y,angle,fillLen,color,width,relief,bounds);
+}
+
+function drawRunningStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var len=fillLen*cp[2]*(.55+rand()*.18);
+  var drift=(rand()-.5)*width*.42;
+  var nx=-Math.sin(angle),ny=Math.cos(angle);
+  drawDoubleStrand(cp[0]-Math.cos(angle)*len/2+nx*drift,cp[1]-Math.sin(angle)*len/2+ny*drift,cp[0]+Math.cos(angle)*len/2+nx*drift,cp[1]+Math.sin(angle)*len/2+ny*drift,shade(color,(rand()-.5)*14),width*.7,relief);
+}
+
+function drawBackStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var len=fillLen*cp[2]*(.74+rand()*.12);
+  var overlap=len*.22;
+  drawDoubleStrand(cp[0]-Math.cos(angle)*(len/2+overlap),cp[1]-Math.sin(angle)*(len/2+overlap),cp[0]+Math.cos(angle)*len/2,cp[1]+Math.sin(angle)*len/2,shade(color,-12),width*.82,relief);
+  drawThreadStroke([[cp[0]-Math.cos(angle)*len*.08,cp[1]-Math.sin(angle)*len*.08],[cp[0]+Math.cos(angle)*len*.36,cp[1]+Math.sin(angle)*len*.36]],shade(color,30),Math.max(.55,width*.42),relief);
+}
+
+function drawSatinStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var len=fillLen*cp[2]*(1.25+rand()*.18);
+  var nx=-Math.sin(angle),ny=Math.cos(angle);
+  for(var i=-1;i<=1;i++){
+    var off=i*width*.88+(rand()-.5)*width*.18;
+    var tone=i%2?8:-10;
+    drawThreadStroke([[cp[0]-Math.cos(angle)*len/2+nx*off,cp[1]-Math.sin(angle)*len/2+ny*off],[cp[0]+Math.cos(angle)*len/2+nx*off,cp[1]+Math.sin(angle)*len/2+ny*off]],shade(color,tone),Math.max(.72,width*.66),relief);
+  }
+}
+
+function drawLongShortStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var nx=-Math.sin(angle),ny=Math.cos(angle);
+  for(var i=-1;i<=1;i++){
+    var len=fillLen*cp[2]*(i? .68+rand()*.16:1.18+rand()*.2);
+    var off=i*width*.9+(rand()-.5)*width*.22;
+    drawThreadStroke([[cp[0]-Math.cos(angle)*len/2+nx*off,cp[1]-Math.sin(angle)*len/2+ny*off],[cp[0]+Math.cos(angle)*len/2+nx*off,cp[1]+Math.sin(angle)*len/2+ny*off]],shade(color,i?10:-14),Math.max(.55,width*.52),relief);
+  }
+}
+
+function drawSeedStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var count=1+(rand()>.62?1:0);
+  for(var i=0;i<count;i++){
+    var a=angle+(rand()-.5)*Math.PI*.9;
+    var len=fillLen*cp[2]*(.22+rand()*.28);
+    var ox=(rand()-.5)*width*2.4,oy=(rand()-.5)*width*2.4;
+    drawThreadStroke([[cp[0]+ox-Math.cos(a)*len/2,cp[1]+oy-Math.sin(a)*len/2],[cp[0]+ox+Math.cos(a)*len/2,cp[1]+oy+Math.sin(a)*len/2]],shade(color,(rand()-.5)*24),Math.max(.5,width*.46),relief);
+  }
+}
+
+function drawFrenchKnot(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var r=Math.max(1.1,width*(.85+rand()*.25));
+  var light=lightingAmount(angle);
+  ctx.save();
+  ctx.globalAlpha=.44;
+  ctx.fillStyle=rgbToCss(shade(color,-64+light*10));
+  ctx.beginPath();ctx.ellipse(cp[0]+r*.34,cp[1]+r*.42,r*1.05,r*.82,angle,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.96;
+  ctx.fillStyle=rgbToCss(shade(color,light*20));
+  ctx.beginPath();ctx.ellipse(cp[0],cp[1],r,r*.78,angle,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=rgbToCss(shade(color,42+light*54));ctx.lineWidth=Math.max(.45,r*.22);ctx.globalAlpha=.32+light*.24+.025*relief;
+  ctx.beginPath();ctx.arc(cp[0]-r*.16,cp[1]-r*.18,r*.48,-2.5,-.2);ctx.stroke();
+  ctx.restore();ctx.globalAlpha=1;
+}
+
+function drawPlusStitch(x,y,angle,len,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var l=len*cp[2]*(.72+rand()*.12);
+  var w=width*(.62+rand()*.1);
+  drawDoubleStrand(cp[0]-Math.cos(angle)*l/2,cp[1]-Math.sin(angle)*l/2,cp[0]+Math.cos(angle)*l/2,cp[1]+Math.sin(angle)*l/2,shade(color,-8),w,relief);
+  var cross=angle+Math.PI/2;
+  drawDoubleStrand(cp[0]-Math.cos(cross)*l*.38,cp[1]-Math.sin(cross)*l*.38,cp[0]+Math.cos(cross)*l*.38,cp[1]+Math.sin(cross)*l*.38,shade(color,18),w*.8,relief);
+}
+
+function drawBlanketStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var len=fillLen*cp[2]*(.58+rand()*.12);
+  var side=angle+Math.PI/2;
+  var x1=cp[0]-Math.cos(angle)*len*.36,y1=cp[1]-Math.sin(angle)*len*.36;
+  var x2=cp[0]+Math.cos(angle)*len*.36,y2=cp[1]+Math.sin(angle)*len*.36;
+  var x3=x2+Math.cos(side)*len*.42,y3=y2+Math.sin(side)*len*.42;
+  drawThreadStroke([[x1,y1],[x2,y2],[x3,y3]],shade(color,-6),Math.max(.58,width*.58),relief);
+  drawThreadStroke([[x2,y2],[x2+Math.cos(side)*len*.22,y2+Math.sin(side)*len*.22]],shade(color,28),Math.max(.45,width*.36),relief);
+}
+
+function drawChainStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  drawChainLink(cp[0],cp[1],angle,fillLen*cp[2]*(.72+rand()*.12),color,Math.max(.6,width*.68),relief,1);
+}
+
+function drawTatamiStitch(x,y,angle,fillLen,color,width,relief,bounds){
+  var cp=canvasPoint(x,y,bounds);
+  var nx=-Math.sin(angle),ny=Math.cos(angle);
+  for(var i=0;i<2;i++){
+    var phase=(i%2)*fillLen*cp[2]*.18;
+    var len=fillLen*cp[2]*(.86+rand()*.22);
+    var off=(i-.5)*width*.88;
+    drawThreadStroke([[cp[0]-Math.cos(angle)*(len*.54-phase)+nx*off,cp[1]-Math.sin(angle)*(len*.54-phase)+ny*off],[cp[0]+Math.cos(angle)*(len*.46+phase)+nx*off,cp[1]+Math.sin(angle)*(len*.46+phase)+ny*off]],shade(color,i?12:-10),Math.max(.55,width*.5),relief);
+  }
+}
+
+var stitchRegistry={
+  running:drawRunningStitch,
+  back:drawBackStitch,
+  satin:drawSatinStitch,
+  'long-short':drawLongShortStitch,
+  seed:drawSeedStitch,
+  'french-knot':drawFrenchKnot,
+  chain:drawChainStitch,
+  blanket:drawBlanketStitch,
+  cross:drawCrossKernelStitch,
+  plus:drawPlusStitch,
+  tatami:drawTatamiStitch
+};
+
+function drawKernelStitch(kernel,x,y,angle,fillLen,color,width,relief,bounds){
+  var renderer=stitchRegistry[kernel]||stitchRegistry.cross;
+  renderer(x,y,angle,fillLen,color,width,relief,bounds);
+}
+
+function drawGuideLines(guideLines,regions,bounds,colors,relief){
+  guideLines.forEach(function(line){
+    if(line.length<2)return;
+    var mid=line[(line.length/2)|0],idx=Math.round(mid[1])*regions.w+Math.round(mid[0]);
+    var region=regions.map[idx]===255?1:regions.map[idx];
+    var pts=line.map(function(p){var cp=canvasPoint(p[0],p[1],bounds);return[cp[0],cp[1]]});
+    drawThreadStroke(pts,shade(colors[region]||colors[0],-14),1.15,relief);
+  });
+}
+
+function drawContourCrossStitches(guideLines,regions,bounds,colors,c){
+  var stitchLen=Math.max(2.7,7.2-c.detail*.19);
+  var width=(.9+c.thread*.22)*canvasPoint(bounds.minX,bounds.minY,bounds)[2]/6;
+  guideLines.forEach(function(line){
+    if(line.length<2)return;
+    var stride=Math.max(1,Math.round(line.length/Math.max(5,line.length/(3.8+c.detail*.2))));
+    for(var i=1;i<line.length;i+=stride){
+      var p=line[i],prev=line[i-1],next=line[Math.min(line.length-1,i+1)];
+      var idx=Math.round(p[1])*regions.w+Math.round(p[0]);
+      var region=regions.map[idx]===255?1:regions.map[idx];
+      var cp=canvasPoint(p[0],p[1],bounds);
+      var angle=Math.atan2(next[1]-prev[1],next[0]-prev[0]);
+      drawCrossStitch(cp[0],cp[1],angle,stitchLen*cp[2],shade(colors[region]||colors[0],-8),width,c.relief);
+    }
+  });
+}
+
+function drawChainLink(x,y,angle,len,color,width,relief,rhythm){
+  rhythm=rhythm||1;
+  width*=rhythm;
+  ctx.save();
+  ctx.translate(x,y);ctx.rotate(angle);
+  ctx.lineCap='round';ctx.lineJoin='round';
+  var light=lightingAmount(angle);
+  ctx.strokeStyle=rgbToCss(shade(color,-54+light*14));ctx.lineWidth=width*1.55;ctx.globalAlpha=.46;
+  ctx.beginPath();ctx.ellipse(1.1,1.3,len*.42,len*.22,0,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle=rgbToCss(shade(color,light*16));ctx.lineWidth=width;ctx.globalAlpha=.94;
+  ctx.beginPath();ctx.ellipse(0,0,len*.42,len*.22,0,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle=rgbToCss(shade(color,34+light*50));ctx.lineWidth=Math.max(.55,width*.32);ctx.globalAlpha=.2+light*.22+.035*relief;
+  ctx.beginPath();ctx.ellipse(-width*.08,-width*.08,len*.34,len*.16,0,-.2,Math.PI*1.2);ctx.stroke();
+  ctx.restore();ctx.globalAlpha=1;
+}
+
+function drawContourChainStitches(guideLines,regions,bounds,colors,c,field,opts){
+  opts=opts||{};
+  var linkLen=Math.max(3.1,7.5-c.detail*.17);
+  var width=(opts.widthScale||1)*(1.05+c.thread*.24)*canvasPoint(bounds.minX,bounds.minY,bounds)[2]/6;
+  guideLines.forEach(function(line){
+    if(line.length<2)return;
+    var stride=Math.max(1,Math.round(line.length/Math.max(5,line.length/(3.2+c.detail*.19))));
+    for(var i=1;i<line.length;i+=stride){
+      var p=line[i],prev=line[i-1],next=line[Math.min(line.length-1,i+1)];
+      var idx=Math.round(p[1])*regions.w+Math.round(p[0]);
+      var region=regions.map[idx]===255?1:regions.map[idx];
+      var cp=canvasPoint(p[0],p[1],bounds);
+      var angle=Math.atan2(next[1]-prev[1],next[0]-prev[0]);
+      var rhythm=contourRhythm(prev,p,next,field,idx);
+      var offset=opts.offset||0;
+      var ox=Math.cos(angle+Math.PI/2)*offset*cp[2],oy=Math.sin(angle+Math.PI/2)*offset*cp[2];
+      drawChainLink(cp[0]+ox,cp[1]+oy,angle,linkLen*cp[2]*(opts.lenScale||1),shade(colors[region]||colors[0],opts.shade||-4),width,c.relief,rhythm);
+    }
+  });
+}
+
+function drawDoubleContourChainStitches(guideLines,regions,bounds,colors,c,field){
+  drawContourChainStitches(guideLines,regions,bounds,colors,c,field,{offset:-1.9,widthScale:1.28,lenScale:1.08,shade:-38});
+  drawContourChainStitches(guideLines,regions,bounds,colors,c,field,{offset:1.35,widthScale:.82,lenScale:.88,shade:28});
+}
+
+function drawContourStitches(guideLines,regions,bounds,colors,c,field){
+  var linkLen=Math.max(2.9,7.1-c.detail*.16);
+  var width=(1+c.thread*.22)*canvasPoint(bounds.minX,bounds.minY,bounds)[2]/6;
+  guideLines.forEach(function(line){
+    if(line.length<2)return;
+    var stride=Math.max(1,Math.round(line.length/Math.max(6,line.length/(3.4+c.detail*.17))));
+    for(var i=1;i<line.length;i+=stride){
+      var p=line[i],prev=line[i-1],next=line[Math.min(line.length-1,i+1)];
+      var idx=Math.round(p[1])*regions.w+Math.round(p[0]);
+      var region=regions.map[idx]===255?1:regions.map[idx];
+      var angle=Math.atan2(next[1]-prev[1],next[0]-prev[0]);
+      var rhythm=contourRhythm(prev,p,next,field,idx);
+      var color=shade(colors[region]||colors[0],c.contourStyle==='chain'?-12:-4);
+      var len=linkLen*(c.contourStyle==='back'?1.08:1)*rhythm;
+      drawKernelStitch(c.contourStyle,p[0],p[1],angle,len,color,width*(c.contourStyle==='blanket'?1.08:1),c.relief,bounds);
+    }
+  });
+}
+
+function detectAccentPoints(regions,mask,field,bounds,detail){
+  var points=[],step=Math.max(2,Math.round(9-detail*.22));
+  for(var y=bounds.minY+2;y<bounds.maxY-2;y+=step){
+    for(var x=bounds.minX+2;x<bounds.maxX-2;x+=step){
+      var idx=(y|0)*regions.w+(x|0);
+      if(!mask[idx])continue;
+      var strong=field.mag[idx]>46;
+      var isolated=regions.gray[idx]<42||regions.gray[idx]>218;
+      var border=regions.map[idx]!==regions.map[idx-1]||regions.map[idx]!==regions.map[idx+1]||regions.map[idx]!==regions.map[idx-regions.w]||regions.map[idx]!==regions.map[idx+regions.w];
+      if(strong&&(isolated||border))points.push({x:x,y:y,idx:idx,score:field.mag[idx]+(isolated?28:0)+(border?18:0)});
+    }
+  }
+  points.sort(function(a,b){return b.score-a.score});
+  return points.slice(0,Math.round(18+detail*1.4));
+}
+
+function drawAccentDetails(regions,mask,field,bounds,c,imageData){
+  detectAccentPoints(regions,mask,field,bounds,c.detail).forEach(function(pt){
+    var region=regions.map[pt.idx]===255?1:regions.map[pt.idx];
+    var p=pt.idx*4;
+    var sampled=[imageData.data[p],imageData.data[p+1],imageData.data[p+2]];
+    var color=mix(c.colors[region]||c.colors[0],sampled,.42);
+    var angle=field.angle[pt.idx]||regionStitchStrategy(region,c.detail,'auto').base;
+    var cp=canvasPoint(pt.x,pt.y,bounds);
+    var len=(2.6+c.detail*.12)*cp[2];
+    var width=(.55+c.thread*.08)*cp[2]/6;
+    drawDoubleStrand(cp[0]-Math.cos(angle)*len/2,cp[1]-Math.sin(angle)*len/2,cp[0]+Math.cos(angle)*len/2,cp[1]+Math.sin(angle)*len/2,shade(color,lightingAmount(angle)*42),width,c.relief+1);
+  });
+}
+
+function stitchDensityScale(kernel){
+  if(kernel==='french-knot')return 2.65;
+  if(kernel==='seed')return 1.45;
+  if(kernel==='running'||kernel==='back')return 1.18;
+  if(kernel==='satin')return .78;
+  if(kernel==='tatami')return .9;
+  return 1;
+}
+
+function addPlanStitch(plan,stitch){
+  plan.stitches.push(stitch);
+}
+
+function generateContourPlanStitches(plan,guideLines,regions,bounds,colors,c,field){
+  if(c.contourStyle==='none')return;
+  var linkLen=Math.max(2.9,7.1-c.detail*.16);
+  var width=(1+c.thread*.22)*canvasPoint(bounds.minX,bounds.minY,bounds)[2]/6;
+  guideLines.forEach(function(line){
+    if(line.length<2)return;
+    var stride=Math.max(1,Math.round(line.length/Math.max(6,line.length/(3.4+c.detail*.17))));
+    for(var i=1;i<line.length;i+=stride){
+      var p=line[i],prev=line[i-1],next=line[Math.min(line.length-1,i+1)];
+      var idx=Math.round(p[1])*regions.w+Math.round(p[0]);
+      var region=regions.map[idx]===255?1:regions.map[idx];
+      var angle=Math.atan2(next[1]-prev[1],next[0]-prev[0]);
+      var rhythm=contourRhythm(prev,p,next,field,idx);
+      addPlanStitch(plan,{layer:'contour',kernel:c.contourStyle,x:p[0],y:p[1],angle:angle,len:linkLen*(c.contourStyle==='back'?1.08:1)*rhythm,color:shade(colors[region]||colors[0],c.contourStyle==='chain'?-12:-4),width:width*(c.contourStyle==='blanket'?1.08:1),relief:c.relief,region:region});
+    }
+  });
+}
+
+function generateAccentPlanStitches(plan,regions,mask,field,bounds,c,imageData){
+  detectAccentPoints(regions,mask,field,bounds,c.detail).forEach(function(pt){
+    var region=regions.map[pt.idx]===255?1:regions.map[pt.idx];
+    var p=pt.idx*4;
+    var sampled=[imageData.data[p],imageData.data[p+1],imageData.data[p+2]];
+    var color=mix(c.colors[region]||c.colors[0],sampled,.42);
+    var angle=field.angle[pt.idx]||regionStitchStrategy(region,c.detail,'auto').base;
+    addPlanStitch(plan,{layer:'accent',kernel:'running',x:pt.x,y:pt.y,angle:angle,len:2.6+c.detail*.12,color:shade(color,lightingAmount(angle)*42),width:.55+c.thread*.08,relief:c.relief+1,region:region});
+  });
+}
+
+function generateStitchPlan(regions,mask,field,bounds,c,imageData,guideLines,contourGuideLines){
+  var plan={meta:{detail:c.detail,stitchStyle:c.stitchStyle,contourStyle:c.contourStyle,seed:c.randomSeed},stitches:[]};
+  var spacing=Math.max(1.55,8.8-c.detail*.34);
+  var width=.8+c.thread*.45;
+  for(var y=bounds.minY;y<=bounds.maxY;y+=spacing){
+    for(var x=bounds.minX;x<=bounds.maxX;x+=spacing){
+      var idx=(y|0)*regions.w+(x|0);
+      if(!mask[idx])continue;
+      var region=regions.map[idx];
+      var strategy=regionStitchStrategy(region,c.detail,c.stitchStyle);
+      var guideHint=nearestGuideAngle(x,y,guideLines);
+      var baseAngle=directionAt(x,y,region,bounds,field);
+      var guideInfluence=guideHint?Math.max(0,1-guideHint.dist/34):0;
+      var edgeBoost=edgeDensityBoost(guideInfluence,c.detail);
+      var skipChance=Math.max(.035,.34-c.detail*.015-edgeBoost);
+      var angle=guideHint?blendAngles(baseAngle,guideHint.angle,guideInfluence):baseAngle;
+      angle=quantizeStitchAngle(angle,region,guideInfluence)+(rand()-.5)*(strategy.jitter+Math.max(0,.03-guideInfluence*.02));
+      var p=idx*4;
+      var sampled=[imageData.data[p],imageData.data[p+1],imageData.data[p+2]];
+      var col=mix(c.colors[region]||c.colors[0],sampled,.34);
+      var fillLen=(2.05+c.detail*.22)*(region===1?1.04:1)*strategy.len;
+      var fillStitchWidth=width*canvasPoint(x,y,bounds)[2]/6*(.62+guideInfluence*.1);
+      var kernel=chooseKernelType(region,guideInfluence,c.detail,regions.gray[idx],strategy);
+      var densityScale=stitchDensityScale(kernel);
+      if(rand()<Math.max(.02,skipChance/densityScale))continue;
+      addPlanStitch(plan,{layer:'fill',kernel:kernel,x:x,y:y,angle:angle,len:fillLen,color:col,width:fillStitchWidth,relief:c.relief,region:region,densityScale:densityScale});
+    }
+  }
+  generateAccentPlanStitches(plan,regions,mask,field,bounds,c,imageData);
+  generateContourPlanStitches(plan,contourGuideLines,regions,bounds,c.colors,c,field);
+  return plan;
+}
+
+function renderStitchPlan(plan,bounds,c){
+  plan.stitches.forEach(function(stitch){
+    drawKernelStitch(stitch.kernel,stitch.x,stitch.y,stitch.angle,stitch.len,stitch.color,stitch.width,stitch.relief,bounds);
+  });
+}
+
+function updateStitchCount(plan){
+  document.getElementById('pro-stitch-count').textContent=String(plan?plan.stitches.length:0);
+}
+
+function renderEmbroidery(){
+  var c=getControls();
+  rng=c.randomSeed;
+  renderScale=c.size;
+  drawKnitBackground(c.bg);
+  var imagePack=sourceImage?imageDataFromSource(sourceImage):makeDemoImage();
+  var imageData=imagePack.data;
+  var mask=buildSubjectMask(imageData,c.cutout,c.tolerance);
+  var regions=makeRegionMap(imageData,mask,c.colors);
+  var bounds=boundsFromMask(mask,regions.w,regions.h);
+  var field=computeGradientField(regions.gray,regions.w,regions.h);
+  var guideLines=extractGuideLines(regions,mask,field,c.detail);
+  var contourGuideLines=extractContourGuideLines(regions,mask,field,c.detail);
+  currentStitchPlan=generateStitchPlan(regions,mask,field,bounds,c,imageData,guideLines,contourGuideLines);
+  renderStitchPlan(currentStitchPlan,bounds,c);
+  updateStitchCount(currentStitchPlan);
+  document.getElementById('pro-status').textContent=sourceImage?'Rendered uploaded source.':'Using procedural bird sample.';
+}
+
+function makeDemoImage(){
+  var off=document.createElement('canvas');off.width=320;off.height=320;
+  var o=off.getContext('2d',{willReadFrequently:true});
+  o.fillStyle='#050505';o.fillRect(0,0,320,320);
+  o.translate(160,160);o.rotate(-.18);
+  o.fillStyle='#2d6d9a';o.beginPath();o.ellipse(-46,14,96,28,-.16,0,Math.PI*2);o.fill();
+  o.fillStyle='#dbc493';o.beginPath();o.ellipse(34,-30,42,102,.45,0,Math.PI*2);o.fill();
+  o.fillStyle='#dfc99f';o.beginPath();o.ellipse(48,40,42,66,-.25,0,Math.PI*2);o.fill();
+  o.fillStyle='#2e6f9e';o.beginPath();o.ellipse(96,10,38,24,.1,0,Math.PI*2);o.fill();
+  o.fillStyle='#c85b1c';o.beginPath();o.ellipse(120,24,22,16,-.2,0,Math.PI*2);o.fill();
+  o.fillStyle='#1b496e';o.beginPath();o.moveTo(-34,68);o.lineTo(-116,140);o.lineTo(-12,88);o.fill();
+  o.setTransform(1,0,0,1,0,0);
+  return {canvas:off,data:o.getImageData(0,0,320,320),scale:1};
+}
+
+['pro-detail','pro-size','pro-thread','pro-relief','pro-tolerance'].forEach(function(id){
+  var el=document.getElementById(id), val=document.getElementById(id+'-val');
+  el.addEventListener('input',function(){val.textContent=el.value;renderEmbroidery()});
+});
+document.getElementById('pro-cutout').addEventListener('change',renderEmbroidery);
+document.getElementById('pro-stitch-style').addEventListener('change',renderEmbroidery);
+document.getElementById('pro-contour-style').addEventListener('change',renderEmbroidery);
+document.getElementById('pro-seed').addEventListener('change',renderEmbroidery);
+['pro-bg','pro-c1','pro-c2','pro-c3'].forEach(function(id){document.getElementById(id).addEventListener('input',renderEmbroidery)});
+document.getElementById('pro-export').addEventListener('click',function(){var a=document.createElement('a');a.download='lace-pro.png';a.href=canvas.toDataURL('image/png');a.click()});
+document.getElementById('pro-regenerate').addEventListener('click',function(){
+  var input=document.getElementById('pro-seed');
+  input.value=String((+input.value||8)+1);
+  renderEmbroidery();
+});
+document.getElementById('pro-export-json').addEventListener('click',function(){
+  if(!currentStitchPlan)return;
+  var blob=new Blob([JSON.stringify(currentStitchPlan,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.download='embroidery-plan.json';
+  a.href=URL.createObjectURL(blob);
+  a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+});
+document.getElementById('pro-upload').addEventListener('change',function(e){
+  var file=e.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){var img=new Image();img.onload=function(){sourceImage=img;renderEmbroidery()};img.src=ev.target.result};
+  reader.readAsDataURL(file);
+});
+renderEmbroidery();
+</script>
+</body>
+</html>
