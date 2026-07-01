@@ -10,7 +10,7 @@
 html,body{height:100%;font-family:Outfit,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
 body{display:grid;grid-template-columns:312px 1fr}
 aside{background:var(--panel);border-right:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:18px;overflow:auto;box-shadow:10px 0 32px rgba(68,50,25,.08)}
-main{min-width:0;display:flex;align-items:center;justify-content:center;background:#eee7dc}
+main{min-width:0;position:relative;overflow:hidden;background:#eee7dc}
 .brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .brand h1{font-size:18px;letter-spacing:0;font-weight:650}.brand span{font-size:11px;color:var(--muted)}
 .group{display:grid;gap:10px;padding:14px 0;border-bottom:1px solid var(--line)}
@@ -27,10 +27,22 @@ button:hover,.file:hover{border-color:var(--accent);color:var(--accent)}
 .file input{display:none}
 .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .note{font-size:11px;line-height:1.45;color:var(--muted)}
-#stage{position:relative;width:min(82vw,980px);height:min(86vh,980px);display:flex;align-items:center;justify-content:center}
-#pro-canvas{width:100%;height:100%;max-width:980px;max-height:980px;object-fit:contain;border-radius:42px;box-shadow:0 22px 80px rgba(68,50,25,.18),inset 0 0 0 1px rgba(255,255,255,.22);background:#070707}
+.workspace{height:100vh;width:100%;display:grid;grid-template-columns:minmax(420px,1fr) minmax(380px,42vw);transition:grid-template-columns .24s ease}
+.workspace.drawer-collapsed{grid-template-columns:minmax(420px,1fr) 0}
+.artboard{min-width:0;height:100%;display:flex;align-items:center;justify-content:center;padding:26px}
+#stage{position:relative;width:min(46vw,656px,86vh);aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+#pro-canvas{width:100%;height:100%;object-fit:contain;border-radius:42px;box-shadow:0 22px 80px rgba(68,50,25,.18),inset 0 0 0 1px rgba(255,255,255,.22);background:#070707}
+.pattern-drawer{position:relative;min-width:0;height:100%;background:#050505;border-left:1px solid rgba(0,0,0,.35);box-shadow:-18px 0 46px rgba(60,43,21,.14);transition:background .24s ease}
+.pattern-drawer.drawer-collapsed{background:transparent;border-left:0;box-shadow:none}
+.drawer-toggle{position:absolute;left:-32px;top:18px;z-index:4;width:32px;height:106px;border-radius:8px 0 0 8px;border-color:rgba(36,33,29,.18);background:rgba(251,248,241,.92);box-shadow:0 8px 24px rgba(68,50,25,.14);writing-mode:vertical-rl;text-orientation:mixed;font-size:11px;letter-spacing:.08em}
+#pattern-stage{position:relative;width:100%;height:100%;display:flex;align-items:stretch;justify-content:stretch;overflow:hidden}
+#pro-pattern-canvas{width:100%;height:100%;object-fit:cover;border-radius:0;background:#070707}
+.export-frame{position:absolute;left:50%;top:50%;width:var(--export-frame-width,58%);aspect-ratio:var(--export-frame-ratio,1);transform:translate(-50%,-50%);border-radius:24px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);box-shadow:0 0 0 9999px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.2),0 18px 44px rgba(0,0,0,.2);pointer-events:none}
+.export-frame::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 80px rgba(255,255,255,.08),inset 0 -40px 70px rgba(0,0,0,.08)}
+.workspace.drawer-collapsed #pattern-stage{opacity:0;pointer-events:none}
 .status{font-size:11px;color:var(--muted);min-height:16px}
-@media(max-width:820px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh;border-right:0;border-bottom:1px solid var(--line)}#stage{width:100vw;height:58vh;padding:10px}}
+@media(max-width:1100px){.workspace{grid-template-columns:1fr minmax(320px,44vw)}.workspace.drawer-collapsed{grid-template-columns:1fr 0}.artboard{padding:18px}#stage{width:min(52vw,608px,88vh)}}
+@media(max-width:820px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh;border-right:0;border-bottom:1px solid var(--line)}.workspace{height:58vh;grid-template-columns:1fr minmax(220px,48vw)}.workspace.drawer-collapsed{grid-template-columns:1fr 0}.artboard{padding:10px}.drawer-toggle{left:-30px;width:30px;height:92px}#stage{width:min(100%,56vh)}}
 </style>
 </head>
 <body>
@@ -56,12 +68,24 @@ button:hover,.file:hover{border-color:var(--accent);color:var(--accent)}
   </div>
   <div class="group">
     <div class="label">Palette</div>
+    <div class="row"><strong>Preset</strong><select id="pro-palette-preset"><option value="swallow">Swallow</option><option value="goldwork">Goldwork</option><option value="botanical">Botanical</option><option value="monogram">Monogram</option><option value="custom">Custom</option></select><span></span></div>
     <div class="swatches">
       <input id="pro-c1" type="color" value="#2e6f9e">
       <input id="pro-c2" type="color" value="#ddc493">
       <input id="pro-c3" type="color" value="#c85b1c">
     </div>
     <div class="row"><strong>Bg</strong><input id="pro-bg" type="color" value="#070707"><span></span></div>
+  </div>
+  <div class="group">
+    <div class="label">Pattern</div>
+    <div class="row"><strong>Preview</strong><input id="pro-pattern-enabled" type="checkbox" checked><span></span></div>
+    <div class="row"><strong>Mode</strong><select id="pro-pattern-mode"><option value="grid">Grid</option><option value="brick">Brick</option><option value="half-drop">Half Drop</option><option value="mirror-x">Mirror X</option><option value="mirror-y">Mirror Y</option><option value="mirror-xy">Mirror XY</option></select><span></span></div>
+    <div class="row"><strong>Scale</strong><input id="pro-pattern-scale" type="range" min="20" max="240" value="62"><span id="pro-pattern-scale-val">62</span></div>
+    <div class="row"><strong>Gap</strong><input id="pro-pattern-gap" type="range" min="-160" max="260" value="0"><span id="pro-pattern-gap-val">0</span></div>
+    <div class="row"><strong>Offset</strong><input id="pro-pattern-offset" type="range" min="-150" max="150" value="50"><span id="pro-pattern-offset-val">50</span></div>
+    <div class="row"><strong>Export</strong><select id="pro-pattern-format"><option value="square">Square</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select><span></span></div>
+    <div class="row"><strong>Output</strong><select id="pro-pattern-multiplier"><option value="1">1x</option><option value="2">2x</option><option value="3">3x</option></select><span></span></div>
+    <button id="pro-export-pattern">Export Pattern</button>
   </div>
   <div class="group">
     <button id="pro-regenerate">Regenerate</button>
@@ -71,16 +95,31 @@ button:hover,.file:hover{border-color:var(--accent);color:var(--accent)}
   </div>
 </aside>
 <main>
-  <div id="stage"><canvas id="pro-canvas" width="1200" height="1200"></canvas></div>
+  <div class="workspace" id="pro-workspace">
+    <section class="artboard" aria-label="Embroidery preview"><div id="stage"><canvas id="pro-canvas" width="1200" height="1200"></canvas></div></section>
+    <section class="pattern-drawer" id="pro-pattern-drawer" aria-label="Pattern preview drawer">
+      <button class="drawer-toggle" id="pro-pattern-drawer-toggle" type="button" aria-expanded="true">Pattern</button>
+      <div id="pattern-stage"><canvas id="pro-pattern-canvas" width="1200" height="1200"></canvas><div class="export-frame" id="pro-export-frame"></div></div>
+    </section>
+  </div>
 </main>
 <script>
 var canvas=document.getElementById('pro-canvas');
 var ctx=canvas.getContext('2d',{willReadFrequently:true});
+var patternCanvas=document.getElementById('pro-pattern-canvas');
+var patternCtx=patternCanvas.getContext('2d',{willReadFrequently:true});
 var sourceImage=null;
 var currentStitchPlan=null;
+var currentPatternBounds=null;
 var renderScale=1;
 var lightDir={x:-.55,y:-.82};
 var rng=1;
+var embroideryPalettes={
+  swallow:{c1:'#2e6f9e',c2:'#ddc493',c3:'#c85b1c',bg:'#070707'},
+  goldwork:{c1:'#d8a942',c2:'#7f1f2b',c3:'#153656',bg:'#10100d'},
+  botanical:{c1:'#356f4b',c2:'#f0dfbd',c3:'#d46f60',bg:'#ddd0bd'},
+  monogram:{c1:'#a1121e',c2:'#5f0c12',c3:'#d5ad57',bg:'#e7dfcf'}
+};
 function rand(){rng=(rng*1664525+1013904223)>>>0;return rng/4294967296}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function hexToRgb(hex){var n=parseInt(String(hex).replace('#',''),16);return[(n>>16)&255,(n>>8)&255,n&255]}
@@ -95,6 +134,14 @@ function getControls(){
     detail:+document.getElementById('pro-detail').value,
     stitchStyle:document.getElementById('pro-stitch-style').value,
     contourStyle:document.getElementById('pro-contour-style').value,
+    palettePreset:document.getElementById('pro-palette-preset').value,
+    patternPreview:document.getElementById('pro-pattern-enabled').checked,
+    patternMode:document.getElementById('pro-pattern-mode').value,
+    patternScale:+document.getElementById('pro-pattern-scale').value/100,
+    patternGap:+document.getElementById('pro-pattern-gap').value,
+    patternOffset:+document.getElementById('pro-pattern-offset').value/100,
+    patternFormat:document.getElementById('pro-pattern-format').value,
+    patternMultiplier:+document.getElementById('pro-pattern-multiplier').value,
     randomSeed:+document.getElementById('pro-seed').value||8,
     size:+document.getElementById('pro-size').value/100,
     thread:+document.getElementById('pro-thread').value,
@@ -104,27 +151,91 @@ function getControls(){
   };
 }
 
-function drawKnitBackground(bg){
+function applyPalettePreset(name){
+  var pal=embroideryPalettes[name];
+  if(!pal)return;
+  document.getElementById('pro-c1').value=pal.c1;
+  document.getElementById('pro-c2').value=pal.c2;
+  document.getElementById('pro-c3').value=pal.c3;
+  document.getElementById('pro-bg').value=pal.bg;
+}
+
+function setPalettePresetCustom(){
+  document.getElementById('pro-palette-preset').value='custom';
+}
+
+function drawKnitFiber(x,y,base,phase,weight,textureScale){
+  var s=textureScale||1;
+  var c=shade(base,weight);
+  ctx.strokeStyle=rgbToCss(c);
+  ctx.lineCap='round';
+  ctx.lineWidth=(phase?1.05+rand()*.45:1.45+rand()*.55)*s;
+  ctx.beginPath();
+  ctx.moveTo(x+(rand()-.5)*1.1*s,y);
+  ctx.bezierCurveTo(x+4.2*s,y+3.8*s,x+1.1*s,y+9.2*s,x+6.8*s,y+15.2*s);
+  ctx.stroke();
+  ctx.strokeStyle=rgbToCss(shade(base,72+rand()*34));
+  ctx.lineWidth=(phase?.22+rand()*.16:.3+rand()*.2)*s;
+  ctx.globalAlpha=.28;
+  ctx.beginPath();
+  ctx.moveTo(x+1.1*s,y+1.6*s);
+  ctx.bezierCurveTo(x+3.8*s,y+4.4*s,x+2.2*s,y+8.4*s,x+5.8*s,y+13.7*s);
+  ctx.stroke();
+}
+
+function drawKnitColumn(x,y,base,textureScale){
+  var s=textureScale||1;
+  ctx.save();
+  ctx.globalAlpha=.42;
+  ctx.strokeStyle=rgbToCss(shade(base,-22+rand()*8));
+  ctx.lineWidth=(2.6+rand()*.7)*s;
+  ctx.beginPath();
+  ctx.moveTo(x+4.7*s,y+1*s);
+  ctx.bezierCurveTo(x+2.1*s,y+5.4*s,x+8.8*s,y+10.4*s,x+4.8*s,y+15.7*s);
+  ctx.stroke();
+  ctx.globalAlpha=.7;
+  drawKnitFiber(x,y,base,0,24+rand()*24,s);
+  ctx.globalAlpha=.62;
+  drawKnitFiber(x+6.5*s,y,base,1,16+rand()*20,s);
+  ctx.strokeStyle=rgbToCss(shade(base,46+rand()*26));
+  ctx.lineWidth=(.68+rand()*.3)*s;
+  ctx.globalAlpha=.48;
+  ctx.beginPath();
+  ctx.moveTo(x+1.3*s,y+1.2*s);
+  ctx.bezierCurveTo(x+4.4*s,y+4.6*s,x+2.8*s,y+8.8*s,x+6.1*s,y+13.4*s);
+  ctx.stroke();
+  ctx.strokeStyle=rgbToCss(shade(base,94+rand()*42));
+  ctx.lineWidth=(.36+rand()*.22)*s;
+  ctx.globalAlpha=.3;
+  ctx.beginPath();
+  ctx.moveTo(x+2.4*s,y+2*s);
+  ctx.bezierCurveTo(x+5.2*s,y+5.5*s,x+3.7*s,y+8.6*s,x+6.4*s,y+12.4*s);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawKnitBackground(bg,targetCtx,targetWidth,targetHeight,textureScale){
+  var s=textureScale||1;
+  var previousCtx=ctx,previousCanvas=canvas;
+  if(targetCtx){
+    ctx=targetCtx;
+    canvas={width:targetWidth,height:targetHeight};
+  }
   ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
   var base=hexToRgb(bg);
   ctx.save();
-  ctx.globalAlpha=.56;
-  for(var x=-20;x<canvas.width+30;x+=18){
-    for(var y=-20;y<canvas.height+30;y+=26){
-      var c=shade(base,16+rand()*18);
-      ctx.strokeStyle=rgbToCss(c);
-      ctx.lineWidth=2.2+rand()*1.4;
-      ctx.beginPath();
-      ctx.moveTo(x+rand()*4,y);
-      ctx.bezierCurveTo(x+8,y+8,x+2,y+17,x+12,y+25);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x+16+rand()*4,y);
-      ctx.bezierCurveTo(x+8,y+8,x+18,y+17,x+8,y+25);
-      ctx.stroke();
+  ctx.globalAlpha=s<1?.48:.62;
+  for(var x=-24*s;x<canvas.width+28*s;x+=11*s){
+    var offset=Math.sin(x*.05)*2.2*s+(rand()-.5)*1.4*s;
+    for(var y=-24*s;y<canvas.height+30*s;y+=16*s){
+      drawKnitColumn(x+offset,y,base,s);
     }
   }
   ctx.restore();
+  if(targetCtx){
+    ctx=previousCtx;
+    canvas=previousCanvas;
+  }
 }
 
 function imageDataFromSource(img){
@@ -515,6 +626,7 @@ function drawThreadStroke(points,color,width,relief){
   ctx.strokeStyle=rgbToCss(shade(color,34+light*42));ctx.lineWidth=Math.max(.7,width*.32);ctx.globalAlpha=.18+light*.18+.035*relief;
   ctx.beginPath();ctx.moveTo(points[0][0]-width*.12,points[0][1]-width*.14);for(var k=1;k<points.length;k++)ctx.lineTo(points[k][0]-width*.12,points[k][1]-width*.14);ctx.stroke();
   drawThreadHighlight(points,color,width,relief);
+  drawThreadSpecular(points,color,width,relief);
   ctx.globalAlpha=1;
 }
 
@@ -528,6 +640,23 @@ function drawThreadHighlight(points,color,width,relief){
   ctx.beginPath();
   ctx.moveTo(points[0][0]-width*.18,points[0][1]-width*.2);
   for(var i=1;i<points.length;i++)ctx.lineTo(points[i][0]-width*.18,points[i][1]-width*.2);
+  ctx.stroke();
+}
+
+function drawThreadSpecular(points,color,width,relief){
+  if(points.length<2)return;
+  var angle=Math.atan2(points[points.length-1][1]-points[0][1],points[points.length-1][0]-points[0][0]);
+  var light=lightingAmount(angle);
+  var specular=.04+light*.22+relief*.035;
+  if(specular<.16&&rand()>.35)return;
+  var mid=(points.length/2)|0;
+  var start=points[Math.max(0,mid-1)],end=points[Math.min(points.length-1,mid+1)];
+  ctx.strokeStyle=rgbToCss(shade(color,88+light*76));
+  ctx.lineWidth=Math.max(.28,width*.11);
+  ctx.globalAlpha=clamp(specular,0,.52);
+  ctx.beginPath();
+  ctx.moveTo(start[0]-width*.26,start[1]-width*.28);
+  ctx.lineTo(end[0]-width*.26,end[1]-width*.28);
   ctx.stroke();
 }
 
@@ -839,7 +968,7 @@ function generateAccentPlanStitches(plan,regions,mask,field,bounds,c,imageData){
 }
 
 function generateStitchPlan(regions,mask,field,bounds,c,imageData,guideLines,contourGuideLines){
-  var plan={meta:{detail:c.detail,stitchStyle:c.stitchStyle,contourStyle:c.contourStyle,seed:c.randomSeed},stitches:[]};
+  var plan={meta:{detail:c.detail,stitchStyle:c.stitchStyle,contourStyle:c.contourStyle,seed:c.randomSeed,palettePreset:c.palettePreset,palette:{c1:document.getElementById('pro-c1').value,c2:document.getElementById('pro-c2').value,c3:document.getElementById('pro-c3').value,bg:document.getElementById('pro-bg').value}},stitches:[]};
   var spacing=Math.max(1.55,8.8-c.detail*.34);
   var width=.8+c.thread*.45;
   for(var y=bounds.minY;y<=bounds.maxY;y+=spacing){
@@ -863,7 +992,9 @@ function generateStitchPlan(regions,mask,field,bounds,c,imageData,guideLines,con
       var kernel=chooseKernelType(region,guideInfluence,c.detail,regions.gray[idx],strategy);
       var densityScale=stitchDensityScale(kernel);
       if(rand()<Math.max(.02,skipChance/densityScale))continue;
-      addPlanStitch(plan,{layer:'fill',kernel:kernel,x:x,y:y,angle:angle,len:fillLen,color:col,width:fillStitchWidth,relief:c.relief,region:region,densityScale:densityScale});
+      var jitterX=(rand()-.5)*spacing*.32;
+      var jitterY=(rand()-.5)*spacing*.32;
+      addPlanStitch(plan,{layer:'fill',kernel:kernel,x:x+jitterX,y:y+jitterY,angle:angle,len:fillLen*(.94+rand()*.14),color:col,width:fillStitchWidth,relief:c.relief,region:region,densityScale:densityScale,variant:rand()});
     }
   }
   generateAccentPlanStitches(plan,regions,mask,field,bounds,c,imageData);
@@ -881,6 +1012,109 @@ function updateStitchCount(plan){
   document.getElementById('pro-stitch-count').textContent=String(plan?plan.stitches.length:0);
 }
 
+function setPatternDrawer(collapsed){
+  var workspace=document.getElementById('pro-workspace');
+  var drawer=document.getElementById('pro-pattern-drawer');
+  var toggle=document.getElementById('pro-pattern-drawer-toggle');
+  workspace.classList.toggle('drawer-collapsed',collapsed);
+  drawer.classList.toggle('drawer-collapsed',collapsed);
+  toggle.setAttribute('aria-expanded',String(!collapsed));
+  toggle.textContent=collapsed?'Open':'Pattern';
+}
+
+function drawPatternTileTo(targetCtx,tile,x,y,size,mode,col,row){
+  var mirrorX=mode==='mirror-x'||mode==='mirror-xy';
+  var mirrorY=mode==='mirror-y'||mode==='mirror-xy';
+  var sx=mirrorX&&col%2?-1:1;
+  var sy=mirrorY&&row%2?-1:1;
+  targetCtx.save();
+  targetCtx.translate(x+size/2,y+size/2);
+  targetCtx.scale(sx,sy);
+  targetCtx.drawImage(tile,-size/2,-size/2,size,size);
+  targetCtx.restore();
+}
+
+function drawPatternTile(tile,x,y,size,mode,col,row){
+  drawPatternTileTo(patternCtx,tile,x,y,size,mode,col,row);
+}
+
+function createTransparentPatternTile(c){
+  var tile=document.createElement('canvas');
+  tile.width=canvas.width;
+  tile.height=canvas.height;
+  var tileCtx=tile.getContext('2d',{willReadFrequently:true});
+  if(!currentStitchPlan||!currentPatternBounds){
+    tileCtx.drawImage(canvas,0,0);
+    return tile;
+  }
+  var previousCtx=ctx,previousCanvas=canvas;
+  ctx=tileCtx;
+  canvas=tile;
+  renderStitchPlan(currentStitchPlan,currentPatternBounds,c);
+  ctx=previousCtx;
+  canvas=previousCanvas;
+  return tile;
+}
+
+function renderPatternToContext(targetCtx,width,height,c){
+  drawKnitBackground(c.bg,targetCtx,width,height,.48);
+  var tile=createTransparentPatternTile(c);
+  var tileSize=Math.max(70,width*c.patternScale*.34);
+  var gap=c.patternGap;
+  var step=tileSize+gap;
+  var cols=Math.ceil(width/step)+3;
+  var rows=Math.ceil(height/step)+3;
+  for(var row=-1;row<rows;row++){
+    for(var col=-1;col<cols;col++){
+      var ox=0,oy=0;
+      if(c.patternMode==='brick')ox=(row%2)*step*c.patternOffset;
+      if(c.patternMode==='half-drop')oy=(col%2)*step*c.patternOffset;
+      drawPatternTileTo(targetCtx,tile,col*step+ox,row*step+oy,tileSize,c.patternMode,col,row);
+    }
+  }
+}
+
+function renderPatternPreview(c){
+  renderPatternToContext(patternCtx,patternCanvas.width,patternCanvas.height,c);
+}
+
+function patternExportSize(format,multiplier){
+  var presets={square:[2048,2048],portrait:[1440,2560],landscape:[2560,1440]};
+  var base=presets[format]||presets.square;
+  return {width:base[0]*multiplier,height:base[1]*multiplier};
+}
+
+function updateExportFrame(c){
+  var frame=document.getElementById('pro-export-frame');
+  var size=patternExportSize(c.patternFormat,1);
+  var ratio=size.width/size.height;
+  frame.hidden=!c.patternPreview;
+  frame.style.setProperty('--export-frame-ratio',String(ratio));
+  frame.style.setProperty('--export-frame-width',c.patternFormat==='portrait'?'42%':c.patternFormat==='landscape'?'72%':'58%');
+}
+
+function exportPatternPng(){
+  var c=getControls();
+  var size=patternExportSize(c.patternFormat,c.patternMultiplier);
+  var frameRatio={square:{w:.58,h:.58},portrait:{w:.42,h:.42/(1440/2560)},landscape:{w:.72,h:.72/(2560/1440)}}[c.patternFormat]||{w:.58,h:.58};
+  var sceneW=Math.ceil(size.width/frameRatio.w);
+  var sceneH=Math.ceil(size.height/frameRatio.h);
+  var scene=document.createElement('canvas');
+  scene.width=sceneW;
+  scene.height=sceneH;
+  renderPatternToContext(scene.getContext('2d',{willReadFrequently:true}),scene.width,scene.height,c);
+  var sx=Math.round((scene.width-size.width)/2);
+  var sy=Math.round((scene.height-size.height)/2);
+  var off=document.createElement('canvas');
+  off.width=size.width;
+  off.height=size.height;
+  off.getContext('2d',{willReadFrequently:true}).drawImage(scene,sx,sy,size.width,size.height,0,0,size.width,size.height);
+  var a=document.createElement('a');
+  a.download='embroidery-pattern-'+c.patternFormat+'-'+c.patternMultiplier+'x.png';
+  a.href=off.toDataURL('image/png');
+  a.click();
+}
+
 function renderEmbroidery(){
   var c=getControls();
   rng=c.randomSeed;
@@ -895,9 +1129,16 @@ function renderEmbroidery(){
   var guideLines=extractGuideLines(regions,mask,field,c.detail);
   var contourGuideLines=extractContourGuideLines(regions,mask,field,c.detail);
   currentStitchPlan=generateStitchPlan(regions,mask,field,bounds,c,imageData,guideLines,contourGuideLines);
+  currentPatternBounds=bounds;
   renderStitchPlan(currentStitchPlan,bounds,c);
   updateStitchCount(currentStitchPlan);
+  renderPatternPreview(c);
+  updateExportFrame(c);
   document.getElementById('pro-status').textContent=sourceImage?'Rendered uploaded source.':'Using procedural bird sample.';
+}
+
+function nextRegenerateSeed(seed){
+  return seed+97+Math.floor(Date.now()%9973);
 }
 
 function makeDemoImage(){
@@ -915,20 +1156,33 @@ function makeDemoImage(){
   return {canvas:off,data:o.getImageData(0,0,320,320),scale:1};
 }
 
-['pro-detail','pro-size','pro-thread','pro-relief','pro-tolerance'].forEach(function(id){
+['pro-detail','pro-size','pro-thread','pro-relief','pro-tolerance','pro-pattern-scale','pro-pattern-gap','pro-pattern-offset'].forEach(function(id){
   var el=document.getElementById(id), val=document.getElementById(id+'-val');
   el.addEventListener('input',function(){val.textContent=el.value;renderEmbroidery()});
 });
 document.getElementById('pro-cutout').addEventListener('change',renderEmbroidery);
 document.getElementById('pro-stitch-style').addEventListener('change',renderEmbroidery);
 document.getElementById('pro-contour-style').addEventListener('change',renderEmbroidery);
+document.getElementById('pro-pattern-enabled').addEventListener('change',function(){updateExportFrame(getControls())});
+document.getElementById('pro-pattern-mode').addEventListener('change',renderEmbroidery);
+document.getElementById('pro-pattern-format').addEventListener('change',function(){updateExportFrame(getControls())});
+document.getElementById('pro-pattern-multiplier').addEventListener('change',function(){updateExportFrame(getControls())});
+document.getElementById('pro-pattern-drawer-toggle').addEventListener('click',function(){
+  setPatternDrawer(!document.getElementById('pro-workspace').classList.contains('drawer-collapsed'));
+});
 document.getElementById('pro-seed').addEventListener('change',renderEmbroidery);
-['pro-bg','pro-c1','pro-c2','pro-c3'].forEach(function(id){document.getElementById(id).addEventListener('input',renderEmbroidery)});
+document.getElementById('pro-palette-preset').addEventListener('change',function(){
+  applyPalettePreset(this.value);
+  renderEmbroidery();
+});
+['pro-bg','pro-c1','pro-c2','pro-c3'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){setPalettePresetCustom();renderEmbroidery()})});
 document.getElementById('pro-export').addEventListener('click',function(){var a=document.createElement('a');a.download='lace-pro.png';a.href=canvas.toDataURL('image/png');a.click()});
+document.getElementById('pro-export-pattern').addEventListener('click',exportPatternPng);
 document.getElementById('pro-regenerate').addEventListener('click',function(){
   var input=document.getElementById('pro-seed');
-  input.value=String((+input.value||8)+1);
+  input.value=String(nextRegenerateSeed(+input.value||8));
   renderEmbroidery();
+  document.getElementById('pro-status').textContent='Regenerated #'+input.value;
 });
 document.getElementById('pro-export-json').addEventListener('click',function(){
   if(!currentStitchPlan)return;
